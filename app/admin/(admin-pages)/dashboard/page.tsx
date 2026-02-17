@@ -1,16 +1,31 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { Card, NoticeBar, Skeleton } from 'antd-mobile';
 import { useRouter } from 'next/navigation';
 import { useKols } from '@/lib/hooks/useKols';
 import { useReminders } from '@/lib/hooks/useReminders';
+import { useSupabase } from '@/components/providers/SupabaseProvider';
 import { ReminderList } from '@/components/reminder/ReminderList';
 import { ROUTES } from '@/lib/constants';
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { kols, loading: kolsLoading } = useKols();
+  const supabase = useSupabase();
+  const { kols, loading: kolsLoading, fetchKols } = useKols();
   const reminders = useReminders();
+  const autoEndedRef = useRef(false);
+
+  useEffect(() => {
+    if (autoEndedRef.current) return;
+    autoEndedRef.current = true;
+    supabase.rpc('auto_end_expired_kols').then(({ data }) => {
+      if (data && data > 0) {
+        fetchKols();
+        reminders.fetchReminders();
+      }
+    });
+  }, [supabase, fetchKols, reminders]);
 
   const activeKols = kols.filter((k) => k.status === 'active');
   const endedKols = kols.filter((k) => k.status === 'ended');

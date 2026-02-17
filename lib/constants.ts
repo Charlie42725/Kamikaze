@@ -34,14 +34,12 @@ export const ROUTES = {
 export const KOL_STATUS_LABELS: Record<string, string> = {
   potential: '潛在',
   active: '進行中',
-  paused: '暫停',
   ended: '已結束',
 };
 
 export const KOL_STATUS_COLORS: Record<string, string> = {
   potential: '#faad14',
   active: '#52c41a',
-  paused: '#d9d9d9',
   ended: '#ff4d4f',
 };
 

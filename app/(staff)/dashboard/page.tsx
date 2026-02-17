@@ -1,15 +1,30 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { Card, NoticeBar, Skeleton } from 'antd-mobile';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useKols } from '@/lib/hooks/useKols';
 import { useReminders } from '@/lib/hooks/useReminders';
+import { useSupabase } from '@/components/providers/SupabaseProvider';
 import { ReminderList } from '@/components/reminder/ReminderList';
 
 export default function StaffDashboard() {
   const { profile } = useAuth();
-  const { kols, loading: kolsLoading } = useKols();
+  const supabase = useSupabase();
+  const { kols, loading: kolsLoading, fetchKols } = useKols();
   const reminders = useReminders();
+  const autoEndedRef = useRef(false);
+
+  useEffect(() => {
+    if (autoEndedRef.current) return;
+    autoEndedRef.current = true;
+    supabase.rpc('auto_end_expired_kols').then(({ data }) => {
+      if (data && data > 0) {
+        fetchKols();
+        reminders.fetchReminders();
+      }
+    });
+  }, [supabase, fetchKols, reminders]);
 
   const activeKols = kols.filter((k) => k.status === 'active');
   const potentialKols = kols.filter((k) => k.status === 'potential');

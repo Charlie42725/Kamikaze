@@ -31,7 +31,6 @@ export default function AdminKolsPage() {
         <Tabs.Tab title="全部" key="all" />
         <Tabs.Tab title="進行中" key="active" />
         <Tabs.Tab title="潛在" key="potential" />
-        <Tabs.Tab title="暫停" key="paused" />
         <Tabs.Tab title="已結束" key="ended" />
       </Tabs>
 

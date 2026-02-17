@@ -24,7 +24,7 @@ export default function KolDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const { getKol } = useKols();
+  const { getKol, deleteKol } = useKols();
   const supabase = useSupabase();
   const [kol, setKol] = useState<Kol | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -156,6 +156,32 @@ export default function KolDetailPage() {
             <List.Item>{kol.notes}</List.Item>
           </List>
         )}
+
+        <div style={{ padding: '24px 0' }}>
+          <Button
+            block
+            color="danger"
+            fill="outline"
+            onClick={() => {
+              Dialog.confirm({
+                content: `確定要刪除 @${kol.ig_handle} 嗎？此操作無法復原。`,
+                confirmText: '刪除',
+                cancelText: '取消',
+                onConfirm: async () => {
+                  try {
+                    await deleteKol(kol.id);
+                    Toast.show({ content: '已刪除', icon: 'success' });
+                    router.replace(ROUTES.STAFF.KOLS);
+                  } catch {
+                    Toast.show({ content: '刪除失敗', icon: 'fail' });
+                  }
+                },
+              });
+            }}
+          >
+            刪除此網紅
+          </Button>
+        </div>
       </div>
     </div>
   );

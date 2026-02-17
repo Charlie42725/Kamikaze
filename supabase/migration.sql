@@ -30,7 +30,7 @@ CREATE TABLE public.products (
 CREATE TABLE public.kols (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   ig_handle             TEXT NOT NULL,
-  status                TEXT NOT NULL CHECK (status IN ('potential','active','paused','ended')) DEFAULT 'potential',
+  status                TEXT NOT NULL CHECK (status IN ('potential','active','ended')) DEFAULT 'potential',
   group_buy_start_date  DATE,
   group_buy_end_date    DATE,
   has_pr_products       BOOLEAN DEFAULT FALSE,
@@ -163,6 +163,10 @@ CREATE POLICY "kols_update" ON public.kols FOR UPDATE USING (
   staff_id = auth.uid() OR
   EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
+CREATE POLICY "kols_delete" ON public.kols FOR DELETE USING (
+  staff_id = auth.uid() OR
+  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+);
 
 -- KOL Products: follow kols access
 CREATE POLICY "kol_products_select" ON public.kol_products FOR SELECT USING (true);
@@ -248,3 +252,22 @@ CREATE TRIGGER kols_updated_at BEFORE UPDATE ON public.kols
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 CREATE TRIGGER settlements_updated_at BEFORE UPDATE ON public.settlements
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
+-- ============================================
+-- Auto-end expired KOLs
+-- ============================================
+
+CREATE OR REPLACE FUNCTION public.auto_end_expired_kols()
+RETURNS INTEGER AS $$
+DECLARE
+  affected INTEGER;
+BEGIN
+  UPDATE public.kols
+  SET status = 'ended'
+  WHERE status = 'active'
+    AND group_buy_end_date IS NOT NULL
+    AND group_buy_end_date < CURRENT_DATE;
+  GET DIAGNOSTICS affected = ROW_COUNT;
+  RETURN affected;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

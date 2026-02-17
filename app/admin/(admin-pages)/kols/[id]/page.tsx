@@ -1,21 +1,25 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import {
   Card,
   List,
+  Button,
+  Dialog,
   SpinLoading,
   Toast,
 } from 'antd-mobile';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { KolStatusBadge } from '@/components/kol/KolStatusBadge';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
+import { ROUTES } from '@/lib/constants';
 import type { Kol, Product, Settlement, Profile } from '@/lib/types/database';
 import dayjs from 'dayjs';
 
 export default function AdminKolDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
   const supabase = useSupabase();
   const [kol, setKol] = useState<Kol | null>(null);
@@ -179,6 +183,33 @@ export default function AdminKolDetailPage() {
             <List.Item>{kol.notes}</List.Item>
           </List>
         )}
+
+        <div style={{ padding: '24px 0' }}>
+          <Button
+            block
+            color="danger"
+            fill="outline"
+            onClick={() => {
+              Dialog.confirm({
+                content: `確定要刪除 @${kol.ig_handle} 嗎？此操作無法復原。`,
+                confirmText: '刪除',
+                cancelText: '取消',
+                onConfirm: async () => {
+                  try {
+                    const { error } = await supabase.from('kols').delete().eq('id', kol.id);
+                    if (error) throw error;
+                    Toast.show({ content: '已刪除', icon: 'success' });
+                    router.replace(ROUTES.ADMIN.KOLS);
+                  } catch {
+                    Toast.show({ content: '刪除失敗', icon: 'fail' });
+                  }
+                },
+              });
+            }}
+          >
+            刪除此網紅
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -31,7 +31,6 @@ const statusOptions = [
   [
     { label: '潛在', value: 'potential' },
     { label: '進行中', value: 'active' },
-    { label: '暫停', value: 'paused' },
     { label: '已結束', value: 'ended' },
   ],
 ];
@@ -74,8 +73,9 @@ export function KolSopForm({
           : null,
         has_pr_products: values.has_pr_products || false,
         pr_ship_mode: values.has_pr_products ? (values.pr_ship_mode || null) : null,
-        pr_ship_reminded: values.pr_ship_reminded || false,
-        pr_products_received: values.pr_products_received || false,
+        pr_ship_reminded: values.has_pr_products ? (values.pr_ship_reminded || false) : false,
+        pr_shipped: values.has_pr_products ? (values.pr_shipped || false) : false,
+        pr_products_received: values.has_pr_products ? (values.pr_products_received || false) : false,
         revenue_share_pct: values.revenue_share_pct ?? null,
         revenue_share_start_unit: values.revenue_share_start_unit ?? null,
         has_exclusive_store: values.has_exclusive_store || false,
@@ -114,6 +114,7 @@ export function KolSopForm({
               status: ['active'],
               has_pr_products: false,
               pr_ship_reminded: false,
+              pr_shipped: false,
               pr_products_received: false,
               has_exclusive_store: false,
               revenue_share_pct: 20,
@@ -121,6 +122,11 @@ export function KolSopForm({
               pr_ship_mode: 'direct',
             }
       }
+      onValuesChange={(changedValues) => {
+        if ('has_pr_products' in changedValues) {
+          setHasPr(changedValues.has_pr_products);
+        }
+      }}
       onFinish={handleSubmit}
       footer={
         <Button block type="submit" color="primary" loading={loading} size="large">
@@ -157,7 +163,7 @@ export function KolSopForm({
         valuePropName="checked"
         childElementPosition="right"
       >
-        <Switch onChange={(checked) => setHasPr(checked)} />
+        <Switch />
       </Form.Item>
       {hasPr && (
         <>
@@ -170,6 +176,9 @@ export function KolSopForm({
             </Radio.Group>
           </Form.Item>
           <Form.Item name="pr_ship_reminded" label="已提醒寄出" valuePropName="checked" childElementPosition="right">
+            <Switch />
+          </Form.Item>
+          <Form.Item name="pr_shipped" label="已寄出" valuePropName="checked" childElementPosition="right">
             <Switch />
           </Form.Item>
           <Form.Item name="pr_products_received" label="已收到公關品" valuePropName="checked" childElementPosition="right">

@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type KolStatus = 'potential' | 'active' | 'paused' | 'ended';
+export type KolStatus = 'potential' | 'active' | 'ended';
 export type UserRole = 'staff' | 'admin';
 export type PrShipMode = 'direct' | 'after_3_sales';
 
@@ -299,7 +299,12 @@ export interface Database {
         Relationships: [];
       };
     };
-    Functions: Record<string, never>;
+    Functions: {
+      auto_end_expired_kols: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
