@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(node -e:*)",
+      "Bash(npx tsc:*)",
+      "Bash(/tmp/test.ts:*)",
+      "Bash(npm run build:*)",
+      "WebFetch(domain:mobile.ant.design)",
+      "WebSearch",
+      "Bash(npm ls:*)",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}
