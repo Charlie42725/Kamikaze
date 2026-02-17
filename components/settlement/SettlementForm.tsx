@@ -39,8 +39,11 @@ export function SettlementForm({
       const data: SettlementInsert = {
         kol_id: kolId,
         sales_rating: rating || null,
-        settlement_amount: values.settlement_amount
-          ? parseFloat(values.settlement_amount)
+        kol_amount: values.kol_amount
+          ? parseFloat(values.kol_amount)
+          : null,
+        marketing_amount: values.marketing_amount
+          ? parseFloat(values.marketing_amount)
           : null,
         is_settled: values.is_settled || false,
         settled_at: values.is_settled ? new Date().toISOString() : null,
@@ -68,7 +71,8 @@ export function SettlementForm({
       initialValues={
         initialData
           ? {
-              settlement_amount: initialData.settlement_amount?.toString() || '',
+              kol_amount: initialData.kol_amount?.toString() || '',
+              marketing_amount: initialData.marketing_amount?.toString() || '',
               is_settled: initialData.is_settled,
               period_start: initialData.period_start
                 ? new Date(initialData.period_start)
@@ -93,8 +97,12 @@ export function SettlementForm({
         <StarRating value={rating} onChange={setRating} />
       </Form.Item>
 
-      <Form.Item name="settlement_amount" label="結算金額 (NT$)">
-        <Input type="number" placeholder="請輸入結算金額" />
+      <Form.Item name="kol_amount" label="網紅金額 (NT$)">
+        <Input type="number" placeholder="請輸入網紅金額" />
+      </Form.Item>
+
+      <Form.Item name="marketing_amount" label="行銷金額 (NT$)">
+        <Input type="number" placeholder="請輸入行銷金額" />
       </Form.Item>
 
       <Form.Item

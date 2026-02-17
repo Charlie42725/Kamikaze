@@ -13,6 +13,7 @@ export const ROUTES = {
     KOL_EDIT: (id: string) => `/kols/${id}/edit`,
     CHECKIN: '/checkin',
     PR_PRODUCTS: '/pr-products',
+    SETTLEMENTS: '/settlements',
     PROFILE: '/profile',
   },
 

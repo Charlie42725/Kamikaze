@@ -36,11 +36,15 @@ export function SettlementCard({ settlement }: SettlementCardProps) {
             ? `${dayjs(settlement.period_start).format('MM/DD')} - ${dayjs(settlement.period_end).format('MM/DD')}`
             : dayjs(settlement.created_at).format('YYYY/MM/DD')}
         </span>
-        {settlement.settlement_amount != null && (
-          <span className="font-semibold text-blue-500">
-            NT$ {settlement.settlement_amount}
-          </span>
-        )}
+        <span className="font-semibold text-sm">
+          {settlement.kol_amount != null && (
+            <span className="text-blue-500">網紅 NT$ {settlement.kol_amount}</span>
+          )}
+          {settlement.kol_amount != null && settlement.marketing_amount != null && ' / '}
+          {settlement.marketing_amount != null && (
+            <span className="text-green-500">行銷 NT$ {settlement.marketing_amount}</span>
+          )}
+        </span>
       </div>
     </Card>
   );

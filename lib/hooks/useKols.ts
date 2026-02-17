@@ -18,7 +18,7 @@ export function useKols(statusFilter?: KolStatus | 'all') {
   const fetchKols = useCallback(async () => {
     try {
       setLoading(true);
-      let query = supabase.from('kols').select('*').order('created_at', { ascending: false });
+      let query = supabase.from('kols').select('*').order('group_buy_start_date', { ascending: false, nullsFirst: false });
 
       if (profileRole === 'staff' && profileId) {
         query = query.eq('staff_id', profileId);

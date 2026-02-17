@@ -213,7 +213,8 @@ export interface Database {
           id: string;
           kol_id: string;
           sales_rating: number | null;
-          settlement_amount: number | null;
+          kol_amount: number | null;
+          marketing_amount: number | null;
           is_settled: boolean;
           settled_at: string | null;
           period_start: string | null;
@@ -227,7 +228,8 @@ export interface Database {
           id?: string;
           kol_id: string;
           sales_rating?: number | null;
-          settlement_amount?: number | null;
+          kol_amount?: number | null;
+          marketing_amount?: number | null;
           is_settled?: boolean;
           settled_at?: string | null;
           period_start?: string | null;
@@ -240,7 +242,8 @@ export interface Database {
         Update: {
           kol_id?: string;
           sales_rating?: number | null;
-          settlement_amount?: number | null;
+          kol_amount?: number | null;
+          marketing_amount?: number | null;
           is_settled?: boolean;
           settled_at?: string | null;
           period_start?: string | null;

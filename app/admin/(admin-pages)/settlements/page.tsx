@@ -7,7 +7,7 @@ import { useSettlements } from '@/lib/hooks/useSettlements';
 
 export default function SettlementsPage() {
   const [activeTab, setActiveTab] = useState<'pending' | 'settled'>('pending');
-  const { settlements, loading } = useSettlements(activeTab === 'settled');
+  const { settlements, loading } = useSettlements({ settled: activeTab === 'settled' });
 
   return (
     <div>

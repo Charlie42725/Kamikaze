@@ -5,9 +5,15 @@ import { useSupabase } from '@/components/providers/SupabaseProvider';
 import { useAuth } from '@/components/providers/AuthProvider';
 import type { Settlement, SettlementInsert, SettlementUpdate } from '@/lib/types/database';
 
-type SettlementWithKol = Settlement & { kol?: { ig_handle: string } };
+type SettlementWithKol = Settlement & { kol?: { ig_handle: string; staff_id: string | null } };
 
-export function useSettlements(settled?: boolean) {
+interface UseSettlementsOptions {
+  settled?: boolean;
+  staffOnly?: boolean;
+}
+
+export function useSettlements(options: UseSettlementsOptions = {}) {
+  const { settled, staffOnly } = options;
   const supabase = useSupabase();
   const { user, loading: authLoading } = useAuth();
   const [settlements, setSettlements] = useState<SettlementWithKol[]>([]);
@@ -18,22 +24,34 @@ export function useSettlements(settled?: boolean) {
       setLoading(true);
       let query = supabase
         .from('settlements')
-        .select('*, kol:kols(ig_handle)')
+        .select('*, kol:kols(ig_handle, staff_id)')
         .order('created_at', { ascending: false });
 
       if (settled !== undefined) {
         query = query.eq('is_settled', settled);
       }
 
+      if (staffOnly && user?.id) {
+        query = query.eq('kol.staff_id', user.id);
+      }
+
       const { data } = await query;
-      setSettlements((data as unknown as SettlementWithKol[]) ?? []);
+
+      let results = (data as unknown as SettlementWithKol[]) ?? [];
+
+      // Client-side filter for staffOnly since PostgREST embedded filter may return nulls
+      if (staffOnly && user?.id) {
+        results = results.filter((s) => s.kol?.staff_id === user.id);
+      }
+
+      setSettlements(results);
     } catch (e) {
       console.error('fetchSettlements error:', e);
       setSettlements([]);
     } finally {
       setLoading(false);
     }
-  }, [supabase, settled]);
+  }, [supabase, settled, staffOnly, user?.id]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -67,7 +85,7 @@ export function useSettlements(settled?: boolean) {
   const getSettlement = async (id: string) => {
     const { data, error } = await supabase
       .from('settlements')
-      .select('*, kol:kols(ig_handle)')
+      .select('*, kol:kols(ig_handle, staff_id)')
       .eq('id', id)
       .single();
     if (error) throw error;

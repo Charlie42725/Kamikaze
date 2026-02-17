@@ -1,17 +1,22 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, NoticeBar, Skeleton } from 'antd-mobile';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useKols } from '@/lib/hooks/useKols';
+import { useSettlements } from '@/lib/hooks/useSettlements';
 import { useReminders } from '@/lib/hooks/useReminders';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
 import { ReminderList } from '@/components/reminder/ReminderList';
+import { ROUTES } from '@/lib/constants';
 
 export default function StaffDashboard() {
   const { profile } = useAuth();
+  const router = useRouter();
   const supabase = useSupabase();
   const { kols, loading: kolsLoading, fetchKols } = useKols();
+  const { settlements: pendingSettlements, loading: settlementsLoading } = useSettlements({ settled: false, staffOnly: true });
   const reminders = useReminders();
   const autoEndedRef = useRef(false);
 
@@ -52,7 +57,7 @@ export default function StaffDashboard() {
         />
       )}
 
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-6">
         <Card style={{ textAlign: 'center' }}>
           {kolsLoading ? (
             <Skeleton.Paragraph lineCount={1} animated />
@@ -80,6 +85,19 @@ export default function StaffDashboard() {
             <>
               <div className="text-2xl font-bold text-yellow-500">{potentialKols.length}</div>
               <div className="text-xs text-gray-500">潛在</div>
+            </>
+          )}
+        </Card>
+        <Card
+          style={{ textAlign: 'center', cursor: 'pointer' }}
+          onClick={() => router.push(ROUTES.STAFF.SETTLEMENTS)}
+        >
+          {settlementsLoading ? (
+            <Skeleton.Paragraph lineCount={1} animated />
+          ) : (
+            <>
+              <div className="text-2xl font-bold text-orange-500">{pendingSettlements.length}</div>
+              <div className="text-xs text-gray-500">我的結算</div>
             </>
           )}
         </Card>

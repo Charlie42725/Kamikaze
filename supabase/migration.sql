@@ -71,7 +71,8 @@ CREATE TABLE public.settlements (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   kol_id            UUID NOT NULL REFERENCES public.kols(id) ON DELETE CASCADE,
   sales_rating      INTEGER CHECK (sales_rating BETWEEN 1 AND 5),
-  settlement_amount NUMERIC(12, 2),
+  kol_amount        NUMERIC(12, 2),
+  marketing_amount  NUMERIC(12, 2),
   is_settled        BOOLEAN NOT NULL DEFAULT FALSE,
   settled_at        TIMESTAMPTZ,
   period_start      DATE,
@@ -180,9 +181,10 @@ CREATE POLICY "checkins_select" ON public.checkins FOR SELECT USING (
 );
 CREATE POLICY "checkins_insert" ON public.checkins FOR INSERT WITH CHECK (staff_id = auth.uid());
 
--- Settlements: admin only
+-- Settlements: admin can see all, staff can see their own KOLs' settlements
 CREATE POLICY "settlements_select" ON public.settlements FOR SELECT USING (
   EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+  OR EXISTS (SELECT 1 FROM public.kols WHERE kols.id = settlements.kol_id AND kols.staff_id = auth.uid())
 );
 CREATE POLICY "settlements_insert" ON public.settlements FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')

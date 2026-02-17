@@ -167,7 +167,12 @@ export default function AdminKolDetailPage() {
             {settlements.map((s) => (
               <List.Item
                 key={s.id}
-                extra={s.settlement_amount != null ? `NT$ ${s.settlement_amount}` : '-'}
+                extra={
+                  [
+                    s.kol_amount != null ? `網紅 NT$${s.kol_amount}` : null,
+                    s.marketing_amount != null ? `行銷 NT$${s.marketing_amount}` : null,
+                  ].filter(Boolean).join(' / ') || '-'
+                }
                 description={`${s.is_settled ? '已結算' : '待結算'} ${s.sales_rating ? `| 評級: ${'★'.repeat(s.sales_rating)}` : ''}`}
               >
                 {s.period_start && s.period_end
