@@ -25,48 +25,28 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
+  // Only refresh session - no extra DB queries
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
 
-  // Public paths that don't require auth
   const publicPaths = ['/login', '/callback'];
   const isPublicPath = publicPaths.some((p) => pathname.startsWith(p));
 
+  // Not logged in → redirect to login
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }
 
-  if (user && isPublicPath) {
-    // Fetch profile to determine role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
+  // Logged in on public page → redirect to home (let client handle role routing)
+  if (user && pathname === '/login') {
     const url = request.nextUrl.clone();
-    url.pathname = profile?.role === 'admin' ? '/admin/dashboard' : '/dashboard';
+    url.pathname = '/';
     return NextResponse.redirect(url);
-  }
-
-  // Role-based route protection
-  if (user && pathname.startsWith('/admin')) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.role !== 'admin') {
-      const url = request.nextUrl.clone();
-      url.pathname = '/dashboard';
-      return NextResponse.redirect(url);
-    }
   }
 
   return supabaseResponse;

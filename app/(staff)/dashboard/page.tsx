@@ -1,24 +1,33 @@
 'use client';
 
-import { Card, SpinLoading } from 'antd-mobile';
+import { Card, SpinLoading, NoticeBar } from 'antd-mobile';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useKols } from '@/lib/hooks/useKols';
-import { ReminderBanner } from '@/components/reminder/ReminderBanner';
+import { useReminders } from '@/lib/hooks/useReminders';
 import { ReminderList } from '@/components/reminder/ReminderList';
 
 export default function StaffDashboard() {
   const { profile } = useAuth();
-  const { kols, loading } = useKols();
+  const { kols, loading: kolsLoading } = useKols();
+  const reminders = useReminders();
 
   const activeKols = kols.filter((k) => k.status === 'active');
   const potentialKols = kols.filter((k) => k.status === 'potential');
 
-  if (loading) {
+  if (kolsLoading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
         <SpinLoading />
       </div>
     );
+  }
+
+  const bannerMessages: string[] = [];
+  if (reminders.upcomingEndings.length > 0) {
+    bannerMessages.push(`${reminders.upcomingEndings.length} 個開團即將到期`);
+  }
+  if (reminders.pendingPr.length > 0) {
+    bannerMessages.push(`${reminders.pendingPr.length} 位網紅尚未收到公關品`);
   }
 
   return (
@@ -27,7 +36,14 @@ export default function StaffDashboard() {
         你好，{profile?.display_name}
       </h2>
 
-      <ReminderBanner />
+      {bannerMessages.length > 0 && (
+        <NoticeBar
+          content={bannerMessages.join('；')}
+          color="alert"
+          closeable
+          style={{ marginBottom: 12 }}
+        />
+      )}
 
       <div className="grid grid-cols-3 gap-3 mb-6">
         <Card style={{ textAlign: 'center' }}>

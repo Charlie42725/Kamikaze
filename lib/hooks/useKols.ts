@@ -7,11 +7,12 @@ import type { Kol, KolInsert, KolUpdate, KolStatus } from '@/lib/types/database'
 
 export function useKols(statusFilter?: KolStatus | 'all') {
   const supabase = useSupabase();
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const [kols, setKols] = useState<Kol[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchKols = useCallback(async () => {
+    if (authLoading) return;
     setLoading(true);
     let query = supabase.from('kols').select('*').order('created_at', { ascending: false });
 
@@ -28,11 +29,11 @@ export function useKols(statusFilter?: KolStatus | 'all') {
       setKols(data as unknown as Kol[]);
     }
     setLoading(false);
-  }, [supabase, profile, statusFilter]);
+  }, [supabase, profile, statusFilter, authLoading]);
 
   useEffect(() => {
-    if (profile) fetchKols();
-  }, [profile, fetchKols]);
+    if (!authLoading) fetchKols();
+  }, [authLoading, fetchKols]);
 
   const createKol = async (kol: KolInsert) => {
     const { data, error } = await supabase.from('kols').insert(kol as never).select().single();

@@ -29,18 +29,19 @@ interface PendingSettlement {
 
 export function useReminders() {
   const supabase = useSupabase();
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const [upcomingEndings, setUpcomingEndings] = useState<GroupBuyEnding[]>([]);
   const [pendingPr, setPendingPr] = useState<PendingPrProduct[]>([]);
   const [pendingSettlements, setPendingSettlements] = useState<PendingSettlement[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchReminders = useCallback(async () => {
-    if (!profile) return;
+    if (authLoading || !profile) return;
     setLoading(true);
 
     const staffFilter = profile.role === 'staff' ? { staff_id: profile.id } : {};
 
+    // All 3 queries run in parallel
     const [endingsRes, prRes, settlementsRes] = await Promise.all([
       supabase
         .from('upcoming_group_buy_endings')
@@ -62,11 +63,11 @@ export function useReminders() {
     if (settlementsRes.data) setPendingSettlements(settlementsRes.data as PendingSettlement[]);
 
     setLoading(false);
-  }, [supabase, profile]);
+  }, [supabase, profile, authLoading]);
 
   useEffect(() => {
-    if (profile) fetchReminders();
-  }, [profile, fetchReminders]);
+    if (!authLoading && profile) fetchReminders();
+  }, [authLoading, profile, fetchReminders]);
 
   const totalReminders = upcomingEndings.length + pendingPr.length + pendingSettlements.length;
 

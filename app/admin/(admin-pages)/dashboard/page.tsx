@@ -1,21 +1,18 @@
 'use client';
 
-import { Card, SpinLoading } from 'antd-mobile';
-import { useAuth } from '@/components/providers/AuthProvider';
+import { Card, SpinLoading, NoticeBar } from 'antd-mobile';
 import { useKols } from '@/lib/hooks/useKols';
 import { useReminders } from '@/lib/hooks/useReminders';
-import { ReminderBanner } from '@/components/reminder/ReminderBanner';
 import { ReminderList } from '@/components/reminder/ReminderList';
 
 export default function AdminDashboard() {
-  const { profile } = useAuth();
-  const { kols, loading } = useKols();
-  const { pendingSettlements } = useReminders();
+  const { kols, loading: kolsLoading } = useKols();
+  const reminders = useReminders();
 
   const activeKols = kols.filter((k) => k.status === 'active');
   const endedKols = kols.filter((k) => k.status === 'ended');
 
-  if (loading) {
+  if (kolsLoading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
         <SpinLoading />
@@ -23,13 +20,26 @@ export default function AdminDashboard() {
     );
   }
 
+  const bannerMessages: string[] = [];
+  if (reminders.upcomingEndings.length > 0) {
+    bannerMessages.push(`${reminders.upcomingEndings.length} 個開團即將到期`);
+  }
+  if (reminders.pendingPr.length > 0) {
+    bannerMessages.push(`${reminders.pendingPr.length} 位網紅尚未收到公關品`);
+  }
+
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">
-        管理總覽
-      </h2>
+      <h2 className="text-xl font-bold mb-4">管理總覽</h2>
 
-      <ReminderBanner />
+      {bannerMessages.length > 0 && (
+        <NoticeBar
+          content={bannerMessages.join('；')}
+          color="alert"
+          closeable
+          style={{ marginBottom: 12 }}
+        />
+      )}
 
       <div className="grid grid-cols-2 gap-3 mb-6">
         <Card style={{ textAlign: 'center' }}>
@@ -45,7 +55,7 @@ export default function AdminDashboard() {
           <div className="text-xs text-gray-500">已結束</div>
         </Card>
         <Card style={{ textAlign: 'center' }}>
-          <div className="text-2xl font-bold text-orange-500">{pendingSettlements.length}</div>
+          <div className="text-2xl font-bold text-orange-500">{reminders.pendingSettlements.length}</div>
           <div className="text-xs text-gray-500">待結算</div>
         </Card>
       </div>
