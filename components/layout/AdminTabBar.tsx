@@ -7,6 +7,7 @@ import {
   TeamOutline,
   ShopbagOutline,
   BillOutline,
+  UserOutline,
 } from 'antd-mobile-icons';
 
 const tabs = [
@@ -14,6 +15,7 @@ const tabs = [
   { key: '/admin/kols', title: '網紅', icon: <TeamOutline /> },
   { key: '/admin/products', title: '商品', icon: <ShopbagOutline /> },
   { key: '/admin/settlements', title: '結算', icon: <BillOutline /> },
+  { key: '/admin/profile', title: '我的', icon: <UserOutline /> },
 ];
 
 export default function AdminTabBar() {
