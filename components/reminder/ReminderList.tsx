@@ -1,24 +1,22 @@
 'use client';
 
-import { List, Tag, Empty, SpinLoading } from 'antd-mobile';
-import { useReminders } from '@/lib/hooks/useReminders';
+import { List, Tag, Empty, Skeleton } from 'antd-mobile';
+import { useReminders, type RemindersData } from '@/lib/hooks/useReminders';
 import { useRouter } from 'next/navigation';
 import { ROUTES } from '@/lib/constants';
 
 interface ReminderListProps {
   basePath?: string;
+  data?: RemindersData;
 }
 
-export function ReminderList({ basePath }: ReminderListProps) {
-  const { upcomingEndings, pendingPr, pendingSettlements, loading } = useReminders();
+export function ReminderList({ basePath, data }: ReminderListProps) {
+  const fetched = useReminders({ skip: !!data });
+  const { upcomingEndings, pendingPr, pendingSettlements, loading } = data ?? fetched;
   const router = useRouter();
 
   if (loading) {
-    return (
-      <div className="flex justify-center py-8">
-        <SpinLoading />
-      </div>
-    );
+    return <Skeleton.Paragraph lineCount={3} animated />;
   }
 
   const hasReminders = upcomingEndings.length + pendingPr.length + pendingSettlements.length > 0;
@@ -30,30 +28,28 @@ export function ReminderList({ basePath }: ReminderListProps) {
   return (
     <div>
       {upcomingEndings.length > 0 && (
-        <>
-          <List header="即將到期開團">
-            {upcomingEndings.map((item) => (
-              <List.Item
-                key={item.id}
-                onClick={() =>
-                  router.push(
-                    basePath
-                      ? `${basePath}/${item.id}`
-                      : ROUTES.STAFF.KOL_DETAIL(item.id)
-                  )
-                }
-                extra={
-                  <Tag color="danger" fill="outline">
-                    {item.days_remaining} 天
-                  </Tag>
-                }
-                description={`結束日期：${item.group_buy_end_date}`}
-              >
-                @{item.ig_handle}
-              </List.Item>
-            ))}
-          </List>
-        </>
+        <List header="即將到期開團">
+          {upcomingEndings.map((item) => (
+            <List.Item
+              key={item.id}
+              onClick={() =>
+                router.push(
+                  basePath
+                    ? `${basePath}/${item.id}`
+                    : ROUTES.STAFF.KOL_DETAIL(item.id)
+                )
+              }
+              extra={
+                <Tag color="danger" fill="outline">
+                  {item.days_remaining} 天
+                </Tag>
+              }
+              description={`結束日期：${item.group_buy_end_date}`}
+            >
+              @{item.ig_handle}
+            </List.Item>
+          ))}
+        </List>
       )}
 
       {pendingPr.length > 0 && (

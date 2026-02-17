@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, SpinLoading, NoticeBar } from 'antd-mobile';
+import { Card, NoticeBar, Skeleton } from 'antd-mobile';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useKols } from '@/lib/hooks/useKols';
 import { useReminders } from '@/lib/hooks/useReminders';
@@ -14,14 +14,6 @@ export default function StaffDashboard() {
   const activeKols = kols.filter((k) => k.status === 'active');
   const potentialKols = kols.filter((k) => k.status === 'potential');
 
-  if (kolsLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <SpinLoading />
-      </div>
-    );
-  }
-
   const bannerMessages: string[] = [];
   if (reminders.upcomingEndings.length > 0) {
     bannerMessages.push(`${reminders.upcomingEndings.length} 個開團即將到期`);
@@ -33,7 +25,7 @@ export default function StaffDashboard() {
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">
-        你好，{profile?.display_name}
+        你好，{profile?.display_name || ''}
       </h2>
 
       {bannerMessages.length > 0 && (
@@ -47,21 +39,39 @@ export default function StaffDashboard() {
 
       <div className="grid grid-cols-3 gap-3 mb-6">
         <Card style={{ textAlign: 'center' }}>
-          <div className="text-2xl font-bold text-blue-500">{kols.length}</div>
-          <div className="text-xs text-gray-500">全部網紅</div>
+          {kolsLoading ? (
+            <Skeleton.Paragraph lineCount={1} animated />
+          ) : (
+            <>
+              <div className="text-2xl font-bold text-blue-500">{kols.length}</div>
+              <div className="text-xs text-gray-500">全部網紅</div>
+            </>
+          )}
         </Card>
         <Card style={{ textAlign: 'center' }}>
-          <div className="text-2xl font-bold text-green-500">{activeKols.length}</div>
-          <div className="text-xs text-gray-500">進行中</div>
+          {kolsLoading ? (
+            <Skeleton.Paragraph lineCount={1} animated />
+          ) : (
+            <>
+              <div className="text-2xl font-bold text-green-500">{activeKols.length}</div>
+              <div className="text-xs text-gray-500">進行中</div>
+            </>
+          )}
         </Card>
         <Card style={{ textAlign: 'center' }}>
-          <div className="text-2xl font-bold text-yellow-500">{potentialKols.length}</div>
-          <div className="text-xs text-gray-500">潛在</div>
+          {kolsLoading ? (
+            <Skeleton.Paragraph lineCount={1} animated />
+          ) : (
+            <>
+              <div className="text-2xl font-bold text-yellow-500">{potentialKols.length}</div>
+              <div className="text-xs text-gray-500">潛在</div>
+            </>
+          )}
         </Card>
       </div>
 
       <h3 className="text-base font-semibold mb-3">待處理提醒</h3>
-      <ReminderList />
+      <ReminderList data={reminders} />
     </div>
   );
 }

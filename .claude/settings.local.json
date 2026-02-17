@@ -9,7 +9,8 @@
       "WebFetch(domain:mobile.ant.design)",
       "WebSearch",
       "Bash(npm ls:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(ls:*)"
     ]
   }
 }

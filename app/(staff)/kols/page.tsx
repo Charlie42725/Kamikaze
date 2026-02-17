@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Tabs, Button, SpinLoading, Empty, FloatingBubble } from 'antd-mobile';
+import { Tabs, SpinLoading, Empty, FloatingBubble, Skeleton } from 'antd-mobile';
 import { AddOutline } from 'antd-mobile-icons';
 import { useRouter } from 'next/navigation';
 import { KolCard } from '@/components/kol/KolCard';
@@ -32,8 +32,9 @@ export default function KolsPage() {
 
       <div className="p-4">
         {loading ? (
-          <div className="flex justify-center py-8">
-            <SpinLoading />
+          <div className="space-y-3">
+            <Skeleton.Paragraph lineCount={3} animated />
+            <Skeleton.Paragraph lineCount={3} animated />
           </div>
         ) : kols.length === 0 ? (
           <Empty description="尚無網紅資料" />

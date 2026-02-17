@@ -35,6 +35,8 @@ CREATE TABLE public.kols (
   group_buy_end_date    DATE,
   has_pr_products       BOOLEAN DEFAULT FALSE,
   pr_ship_mode          TEXT CHECK (pr_ship_mode IN ('direct', 'after_3_sales')),
+  pr_shipped            BOOLEAN DEFAULT FALSE,
+  pr_ship_reminded      BOOLEAN DEFAULT FALSE,
   pr_products_received  BOOLEAN DEFAULT FALSE,
   revenue_share_pct     NUMERIC(5, 2),
   revenue_share_start_unit INTEGER,
@@ -104,6 +106,8 @@ SELECT
   k.ig_handle,
   k.staff_id,
   k.has_pr_products,
+  k.pr_ship_reminded,
+  k.pr_shipped,
   k.pr_products_received
 FROM public.kols k
 WHERE k.has_pr_products = TRUE

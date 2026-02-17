@@ -1,24 +1,19 @@
 'use client';
 
-import { Card, SpinLoading, NoticeBar } from 'antd-mobile';
+import { Card, NoticeBar, Skeleton } from 'antd-mobile';
+import { useRouter } from 'next/navigation';
 import { useKols } from '@/lib/hooks/useKols';
 import { useReminders } from '@/lib/hooks/useReminders';
 import { ReminderList } from '@/components/reminder/ReminderList';
+import { ROUTES } from '@/lib/constants';
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const { kols, loading: kolsLoading } = useKols();
   const reminders = useReminders();
 
   const activeKols = kols.filter((k) => k.status === 'active');
   const endedKols = kols.filter((k) => k.status === 'ended');
-
-  if (kolsLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <SpinLoading />
-      </div>
-    );
-  }
 
   const bannerMessages: string[] = [];
   if (reminders.upcomingEndings.length > 0) {
@@ -43,25 +38,62 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-2 gap-3 mb-6">
         <Card style={{ textAlign: 'center' }}>
-          <div className="text-2xl font-bold text-blue-500">{kols.length}</div>
-          <div className="text-xs text-gray-500">全部網紅</div>
+          {kolsLoading ? (
+            <Skeleton.Paragraph lineCount={1} animated />
+          ) : (
+            <>
+              <div className="text-2xl font-bold text-blue-500">{kols.length}</div>
+              <div className="text-xs text-gray-500">全部網紅</div>
+            </>
+          )}
         </Card>
         <Card style={{ textAlign: 'center' }}>
-          <div className="text-2xl font-bold text-green-500">{activeKols.length}</div>
-          <div className="text-xs text-gray-500">進行中</div>
+          {kolsLoading ? (
+            <Skeleton.Paragraph lineCount={1} animated />
+          ) : (
+            <>
+              <div className="text-2xl font-bold text-green-500">{activeKols.length}</div>
+              <div className="text-xs text-gray-500">進行中</div>
+            </>
+          )}
         </Card>
         <Card style={{ textAlign: 'center' }}>
-          <div className="text-2xl font-bold text-gray-500">{endedKols.length}</div>
-          <div className="text-xs text-gray-500">已結束</div>
+          {kolsLoading ? (
+            <Skeleton.Paragraph lineCount={1} animated />
+          ) : (
+            <>
+              <div className="text-2xl font-bold text-gray-500">{endedKols.length}</div>
+              <div className="text-xs text-gray-500">已結束</div>
+            </>
+          )}
         </Card>
         <Card style={{ textAlign: 'center' }}>
-          <div className="text-2xl font-bold text-orange-500">{reminders.pendingSettlements.length}</div>
-          <div className="text-xs text-gray-500">待結算</div>
+          {reminders.loading ? (
+            <Skeleton.Paragraph lineCount={1} animated />
+          ) : (
+            <>
+              <div className="text-2xl font-bold text-orange-500">{reminders.pendingSettlements.length}</div>
+              <div className="text-xs text-gray-500">待結算</div>
+            </>
+          )}
+        </Card>
+        <Card
+          style={{ textAlign: 'center', cursor: 'pointer' }}
+          onClick={() => router.push(ROUTES.ADMIN.PR_PRODUCTS)}
+        >
+          {reminders.loading ? (
+            <Skeleton.Paragraph lineCount={1} animated />
+          ) : (
+            <>
+              <div className="text-2xl font-bold text-purple-500">{reminders.pendingPr.length}</div>
+              <div className="text-xs text-gray-500">待寄公關品</div>
+            </>
+          )}
         </Card>
       </div>
 
       <h3 className="text-base font-semibold mb-3">待處理提醒</h3>
-      <ReminderList basePath="/admin/kols" />
+      <ReminderList basePath="/admin/kols" data={reminders} />
     </div>
   );
 }

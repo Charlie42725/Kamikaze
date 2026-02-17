@@ -6,7 +6,7 @@ import {
   Card,
   List,
   Button,
-  SpinLoading,
+  Skeleton,
   Tag,
   Space,
   Dialog,
@@ -65,8 +65,11 @@ export default function KolDetailPage() {
 
   if (loading || !kol) {
     return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <SpinLoading />
+      <div>
+        <PageHeader title="載入中..." />
+        <div className="p-4">
+          <Skeleton.Paragraph lineCount={5} animated />
+        </div>
       </div>
     );
   }
@@ -112,9 +115,17 @@ export default function KolDetailPage() {
             需要公關品
           </List.Item>
           {kol.has_pr_products && (
-            <List.Item extra={kol.pr_ship_mode === 'after_3_sales' ? '銷售 3 件後寄出' : '直接寄出'}>
-              寄送方式
-            </List.Item>
+            <>
+              <List.Item extra={kol.pr_ship_mode === 'after_3_sales' ? '銷售 3 件後寄出' : '直接寄出'}>
+                寄送方式
+              </List.Item>
+              <List.Item extra={kol.pr_ship_reminded ? '已提醒' : '未提醒'}>
+                提醒寄出
+              </List.Item>
+              <List.Item extra={kol.pr_shipped ? '已寄出' : '未寄出'}>
+                寄出狀態
+              </List.Item>
+            </>
           )}
           <List.Item extra={kol.pr_products_received ? '已收到' : '未收到'}>
             收到狀態

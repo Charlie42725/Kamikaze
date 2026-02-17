@@ -1,6 +1,6 @@
 'use client';
 
-import { SpinLoading, InfiniteScroll, Empty } from 'antd-mobile';
+import { Skeleton, Empty } from 'antd-mobile';
 import { CheckinCard } from './CheckinCard';
 import { useCheckins } from '@/lib/hooks/useCheckins';
 
@@ -9,8 +9,8 @@ export function CheckinHistory() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-8">
-        <SpinLoading />
+      <div className="p-4">
+        <Skeleton.Paragraph lineCount={4} animated />
       </div>
     );
   }

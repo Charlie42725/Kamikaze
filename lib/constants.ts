@@ -12,6 +12,7 @@ export const ROUTES = {
     KOL_DETAIL: (id: string) => `/kols/${id}`,
     KOL_EDIT: (id: string) => `/kols/${id}/edit`,
     CHECKIN: '/checkin',
+    PR_PRODUCTS: '/pr-products',
     PROFILE: '/profile',
   },
 
@@ -23,6 +24,7 @@ export const ROUTES = {
     PRODUCTS: '/admin/products',
     PRODUCT_ADD: '/admin/products/add',
     PRODUCT_EDIT: (id: string) => `/admin/products/${id}/edit`,
+    PR_PRODUCTS: '/admin/pr-products',
     SETTLEMENTS: '/admin/settlements',
     SETTLEMENT_DETAIL: (id: string) => `/admin/settlements/${id}`,
   },

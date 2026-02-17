@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
 import { useAuth } from '@/components/providers/AuthProvider';
 
@@ -17,6 +17,8 @@ interface PendingPrProduct {
   ig_handle: string;
   staff_id: string | null;
   has_pr_products: boolean;
+  pr_ship_reminded: boolean;
+  pr_shipped: boolean;
   pr_products_received: boolean;
 }
 
@@ -27,18 +29,33 @@ interface PendingSettlement {
   staff_id: string | null;
 }
 
-export function useReminders() {
+export interface RemindersData {
+  upcomingEndings: GroupBuyEnding[];
+  pendingPr: PendingPrProduct[];
+  pendingSettlements: PendingSettlement[];
+  totalReminders: number;
+  loading: boolean;
+  fetchReminders: () => Promise<void>;
+}
+
+export function useReminders(options?: { skip?: boolean }): RemindersData {
+  const skip = options?.skip ?? false;
   const supabase = useSupabase();
   const { profile, loading: authLoading } = useAuth();
   const [upcomingEndings, setUpcomingEndings] = useState<GroupBuyEnding[]>([]);
   const [pendingPr, setPendingPr] = useState<PendingPrProduct[]>([]);
   const [pendingSettlements, setPendingSettlements] = useState<PendingSettlement[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!skip);
+  const fetchedRef = useRef(skip);
+
+  const profileId = profile?.id;
+  const profileRole = profile?.role;
 
   const fetchReminders = useCallback(async () => {
+    if (skip) return;
     try {
       setLoading(true);
-      const staffFilter = profile?.role === 'staff' ? { staff_id: profile.id } : {};
+      const staffFilter = profileRole === 'staff' && profileId ? { staff_id: profileId } : {};
 
       const [endingsRes, prRes, settlementsRes] = await Promise.all([
         supabase
@@ -56,6 +73,10 @@ export function useReminders() {
           .match(staffFilter),
       ]);
 
+      if (endingsRes.error) console.error('reminders endings error:', endingsRes.error);
+      if (prRes.error) console.error('reminders pr error:', prRes.error);
+      if (settlementsRes.error) console.error('reminders settlements error:', settlementsRes.error);
+
       setUpcomingEndings((endingsRes.data as GroupBuyEnding[]) ?? []);
       setPendingPr((prRes.data as PendingPrProduct[]) ?? []);
       setPendingSettlements((settlementsRes.data as PendingSettlement[]) ?? []);
@@ -63,14 +84,20 @@ export function useReminders() {
       console.error('fetchReminders error:', e);
     } finally {
       setLoading(false);
+      fetchedRef.current = true;
     }
-  }, [supabase, profile]);
+  }, [supabase, profileId, profileRole, skip]);
 
   useEffect(() => {
-    if (!authLoading) {
+    if (skip || authLoading) return;
+
+    if (profileId) {
       fetchReminders();
+    } else {
+      setLoading(false);
+      fetchedRef.current = true;
     }
-  }, [authLoading, fetchReminders]);
+  }, [skip, authLoading, profileId, fetchReminders]);
 
   const totalReminders = upcomingEndings.length + pendingPr.length + pendingSettlements.length;
 
@@ -79,7 +106,7 @@ export function useReminders() {
     pendingPr,
     pendingSettlements,
     totalReminders,
-    loading: loading || authLoading,
+    loading: skip ? false : authLoading ? true : loading,
     fetchReminders,
   };
 }

@@ -74,6 +74,7 @@ export function KolSopForm({
           : null,
         has_pr_products: values.has_pr_products || false,
         pr_ship_mode: values.has_pr_products ? (values.pr_ship_mode || null) : null,
+        pr_ship_reminded: values.pr_ship_reminded || false,
         pr_products_received: values.pr_products_received || false,
         revenue_share_pct: values.revenue_share_pct ?? null,
         revenue_share_start_unit: values.revenue_share_start_unit ?? null,
@@ -112,6 +113,7 @@ export function KolSopForm({
           : {
               status: ['active'],
               has_pr_products: false,
+              pr_ship_reminded: false,
               pr_products_received: false,
               has_exclusive_store: false,
               revenue_share_pct: 20,
@@ -167,7 +169,10 @@ export function KolSopForm({
               </Space>
             </Radio.Group>
           </Form.Item>
-          <Form.Item name="pr_products_received" label="已收到公關品" valuePropName="checked">
+          <Form.Item name="pr_ship_reminded" label="已提醒寄出" valuePropName="checked" childElementPosition="right">
+            <Switch />
+          </Form.Item>
+          <Form.Item name="pr_products_received" label="已收到公關品" valuePropName="checked" childElementPosition="right">
             <Switch />
           </Form.Item>
         </>

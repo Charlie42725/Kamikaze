@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Tabs, SpinLoading, Empty, SearchBar } from 'antd-mobile';
+import { Tabs, Skeleton, Empty, SearchBar } from 'antd-mobile';
 import { KolCard } from '@/components/kol/KolCard';
 import { useKols } from '@/lib/hooks/useKols';
 import type { KolStatus } from '@/lib/types/database';
@@ -37,9 +37,7 @@ export default function AdminKolsPage() {
 
       <div className="p-4">
         {loading ? (
-          <div className="flex justify-center py-8">
-            <SpinLoading />
-          </div>
+          <Skeleton.Paragraph lineCount={5} animated />
         ) : filteredKols.length === 0 ? (
           <Empty description="尚無網紅資料" />
         ) : (

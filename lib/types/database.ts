@@ -85,6 +85,8 @@ export interface Database {
           group_buy_end_date: string | null;
           has_pr_products: boolean;
           pr_ship_mode: PrShipMode | null;
+          pr_shipped: boolean;
+          pr_ship_reminded: boolean;
           pr_products_received: boolean;
           revenue_share_pct: number | null;
           revenue_share_start_unit: number | null;
@@ -102,6 +104,8 @@ export interface Database {
           group_buy_end_date?: string | null;
           has_pr_products?: boolean;
           pr_ship_mode?: PrShipMode | null;
+          pr_shipped?: boolean;
+          pr_ship_reminded?: boolean;
           pr_products_received?: boolean;
           revenue_share_pct?: number | null;
           revenue_share_start_unit?: number | null;
@@ -118,6 +122,8 @@ export interface Database {
           group_buy_end_date?: string | null;
           has_pr_products?: boolean;
           pr_ship_mode?: PrShipMode | null;
+          pr_shipped?: boolean;
+          pr_ship_reminded?: boolean;
           pr_products_received?: boolean;
           revenue_share_pct?: number | null;
           revenue_share_start_unit?: number | null;
@@ -277,6 +283,8 @@ export interface Database {
           ig_handle: string;
           staff_id: string | null;
           has_pr_products: boolean;
+          pr_ship_reminded: boolean;
+          pr_shipped: boolean;
           pr_products_received: boolean;
         };
         Relationships: [];
