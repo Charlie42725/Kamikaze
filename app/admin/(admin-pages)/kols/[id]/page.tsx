@@ -117,6 +117,20 @@ export default function AdminKolDetailPage() {
           </List.Item>
         </List>
 
+        <List header="公關品">
+          <List.Item extra={kol.has_pr_products ? '是' : '否'}>
+            需要公關品
+          </List.Item>
+          {kol.has_pr_products && (
+            <List.Item extra={kol.pr_ship_mode === 'after_3_sales' ? '銷售 3 件後寄出' : '直接寄出'}>
+              寄送方式
+            </List.Item>
+          )}
+          <List.Item extra={kol.pr_products_received ? '已收到' : '未收到'}>
+            收到狀態
+          </List.Item>
+        </List>
+
         <List header="分潤設定">
           <List.Item extra={kol.revenue_share_pct != null ? `${kol.revenue_share_pct}%` : '-'}>
             分潤比例

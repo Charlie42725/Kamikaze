@@ -47,7 +47,8 @@ export function CheckinUploader() {
 
     setSubmitting(true);
     try {
-      await createCheckin(fileList[0].url!, notes || undefined);
+      const imageUrls = fileList.map((f) => f.url!);
+      await createCheckin(imageUrls, notes || undefined);
       setFileList([]);
       setNotes('');
       Toast.show({ content: '打卡成功！', icon: 'success' });
@@ -64,7 +65,8 @@ export function CheckinUploader() {
         value={fileList}
         onChange={setFileList}
         upload={handleUpload}
-        maxCount={1}
+        maxCount={9}
+        multiple
         style={{ '--cell-size': '120px' }}
       />
       <div className="mt-4">

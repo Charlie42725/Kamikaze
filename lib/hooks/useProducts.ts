@@ -10,17 +10,21 @@ export function useProducts() {
   const [loading, setLoading] = useState(true);
 
   const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('is_active', true)
-      .order('name', { ascending: true });
+    try {
+      setLoading(true);
+      const { data } = await supabase
+        .from('products')
+        .select('*')
+        .eq('is_active', true)
+        .order('name', { ascending: true });
 
-    if (!error && data) {
-      setProducts(data as unknown as Product[]);
+      setProducts((data as unknown as Product[]) ?? []);
+    } catch (e) {
+      console.error('fetchProducts error:', e);
+      setProducts([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [supabase]);
 
   useEffect(() => {

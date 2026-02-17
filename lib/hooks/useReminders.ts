@@ -36,38 +36,41 @@ export function useReminders() {
   const [loading, setLoading] = useState(true);
 
   const fetchReminders = useCallback(async () => {
-    if (authLoading || !profile) return;
-    setLoading(true);
+    try {
+      setLoading(true);
+      const staffFilter = profile?.role === 'staff' ? { staff_id: profile.id } : {};
 
-    const staffFilter = profile.role === 'staff' ? { staff_id: profile.id } : {};
+      const [endingsRes, prRes, settlementsRes] = await Promise.all([
+        supabase
+          .from('upcoming_group_buy_endings')
+          .select('*')
+          .match(staffFilter)
+          .order('days_remaining', { ascending: true }),
+        supabase
+          .from('pending_pr_products')
+          .select('*')
+          .match(staffFilter),
+        supabase
+          .from('pending_settlements')
+          .select('*')
+          .match(staffFilter),
+      ]);
 
-    // All 3 queries run in parallel
-    const [endingsRes, prRes, settlementsRes] = await Promise.all([
-      supabase
-        .from('upcoming_group_buy_endings')
-        .select('*')
-        .match(staffFilter)
-        .order('days_remaining', { ascending: true }),
-      supabase
-        .from('pending_pr_products')
-        .select('*')
-        .match(staffFilter),
-      supabase
-        .from('pending_settlements')
-        .select('*')
-        .match(staffFilter),
-    ]);
-
-    if (endingsRes.data) setUpcomingEndings(endingsRes.data as GroupBuyEnding[]);
-    if (prRes.data) setPendingPr(prRes.data as PendingPrProduct[]);
-    if (settlementsRes.data) setPendingSettlements(settlementsRes.data as PendingSettlement[]);
-
-    setLoading(false);
-  }, [supabase, profile, authLoading]);
+      setUpcomingEndings((endingsRes.data as GroupBuyEnding[]) ?? []);
+      setPendingPr((prRes.data as PendingPrProduct[]) ?? []);
+      setPendingSettlements((settlementsRes.data as PendingSettlement[]) ?? []);
+    } catch (e) {
+      console.error('fetchReminders error:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, [supabase, profile]);
 
   useEffect(() => {
-    if (!authLoading && profile) fetchReminders();
-  }, [authLoading, profile, fetchReminders]);
+    if (!authLoading) {
+      fetchReminders();
+    }
+  }, [authLoading, fetchReminders]);
 
   const totalReminders = upcomingEndings.length + pendingPr.length + pendingSettlements.length;
 
@@ -76,7 +79,7 @@ export function useReminders() {
     pendingPr,
     pendingSettlements,
     totalReminders,
-    loading,
+    loading: loading || authLoading,
     fetchReminders,
   };
 }

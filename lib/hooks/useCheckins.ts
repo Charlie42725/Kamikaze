@@ -7,36 +7,46 @@ import type { Checkin } from '@/lib/types/database';
 
 export function useCheckins() {
   const supabase = useSupabase();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [checkins, setCheckins] = useState<Checkin[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchCheckins = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('checkins')
-      .select('*')
-      .eq('staff_id', user.id)
-      .order('checked_at', { ascending: false });
-
-    if (!error && data) {
-      setCheckins(data as unknown as Checkin[]);
+    if (!user) {
+      setCheckins([]);
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+    try {
+      setLoading(true);
+      const { data } = await supabase
+        .from('checkins')
+        .select('*')
+        .eq('staff_id', user.id)
+        .order('checked_at', { ascending: false });
+
+      setCheckins((data as unknown as Checkin[]) ?? []);
+    } catch (e) {
+      console.error('fetchCheckins error:', e);
+      setCheckins([]);
+    } finally {
+      setLoading(false);
+    }
   }, [supabase, user]);
 
   useEffect(() => {
-    if (user) fetchCheckins();
-  }, [user, fetchCheckins]);
+    if (!authLoading) {
+      fetchCheckins();
+    }
+  }, [authLoading, fetchCheckins]);
 
-  const createCheckin = async (imageUrl: string, notes?: string) => {
+  const createCheckin = async (imageUrls: string[], notes?: string) => {
     if (!user) throw new Error('Not authenticated');
     const { data, error } = await supabase
       .from('checkins')
       .insert({
         staff_id: user.id,
-        image_url: imageUrl,
+        image_url: JSON.stringify(imageUrls),
         notes,
       } as never)
       .select()
@@ -46,5 +56,5 @@ export function useCheckins() {
     return data as unknown as Checkin;
   };
 
-  return { checkins, loading, fetchCheckins, createCheckin };
+  return { checkins, loading: loading || authLoading, fetchCheckins, createCheckin };
 }

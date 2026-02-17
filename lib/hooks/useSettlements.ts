@@ -9,31 +9,37 @@ type SettlementWithKol = Settlement & { kol?: { ig_handle: string } };
 
 export function useSettlements(settled?: boolean) {
   const supabase = useSupabase();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [settlements, setSettlements] = useState<SettlementWithKol[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchSettlements = useCallback(async () => {
-    setLoading(true);
-    let query = supabase
-      .from('settlements')
-      .select('*, kol:kols(ig_handle)')
-      .order('created_at', { ascending: false });
+    try {
+      setLoading(true);
+      let query = supabase
+        .from('settlements')
+        .select('*, kol:kols(ig_handle)')
+        .order('created_at', { ascending: false });
 
-    if (settled !== undefined) {
-      query = query.eq('is_settled', settled);
-    }
+      if (settled !== undefined) {
+        query = query.eq('is_settled', settled);
+      }
 
-    const { data, error } = await query;
-    if (!error && data) {
-      setSettlements(data as unknown as SettlementWithKol[]);
+      const { data } = await query;
+      setSettlements((data as unknown as SettlementWithKol[]) ?? []);
+    } catch (e) {
+      console.error('fetchSettlements error:', e);
+      setSettlements([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [supabase, settled]);
 
   useEffect(() => {
-    fetchSettlements();
-  }, [fetchSettlements]);
+    if (!authLoading) {
+      fetchSettlements();
+    }
+  }, [authLoading, fetchSettlements]);
 
   const createSettlement = async (settlement: SettlementInsert) => {
     const { data, error } = await supabase
@@ -68,5 +74,5 @@ export function useSettlements(settled?: boolean) {
     return data as unknown as SettlementWithKol;
   };
 
-  return { settlements, loading, fetchSettlements, createSettlement, updateSettlement, getSettlement };
+  return { settlements, loading: loading || authLoading, fetchSettlements, createSettlement, updateSettlement, getSettlement };
 }

@@ -12,27 +12,32 @@ export function useKols(statusFilter?: KolStatus | 'all') {
   const [loading, setLoading] = useState(true);
 
   const fetchKols = useCallback(async () => {
-    if (authLoading) return;
-    setLoading(true);
-    let query = supabase.from('kols').select('*').order('created_at', { ascending: false });
+    try {
+      setLoading(true);
+      let query = supabase.from('kols').select('*').order('created_at', { ascending: false });
 
-    if (profile?.role === 'staff') {
-      query = query.eq('staff_id', profile.id);
-    }
+      if (profile?.role === 'staff') {
+        query = query.eq('staff_id', profile.id);
+      }
 
-    if (statusFilter && statusFilter !== 'all') {
-      query = query.eq('status', statusFilter);
-    }
+      if (statusFilter && statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
 
-    const { data, error } = await query;
-    if (!error && data) {
-      setKols(data as unknown as Kol[]);
+      const { data } = await query;
+      setKols((data as unknown as Kol[]) ?? []);
+    } catch (e) {
+      console.error('fetchKols error:', e);
+      setKols([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, [supabase, profile, statusFilter, authLoading]);
+  }, [supabase, profile, statusFilter]);
 
   useEffect(() => {
-    if (!authLoading) fetchKols();
+    if (!authLoading) {
+      fetchKols();
+    }
   }, [authLoading, fetchKols]);
 
   const createKol = async (kol: KolInsert) => {
@@ -60,5 +65,5 @@ export function useKols(statusFilter?: KolStatus | 'all') {
     return data as unknown as Kol;
   };
 
-  return { kols, loading, fetchKols, createKol, updateKol, getKol };
+  return { kols, loading: loading || authLoading, fetchKols, createKol, updateKol, getKol };
 }

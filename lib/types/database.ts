@@ -8,6 +8,7 @@ export type Json =
 
 export type KolStatus = 'potential' | 'active' | 'paused' | 'ended';
 export type UserRole = 'staff' | 'admin';
+export type PrShipMode = 'direct' | 'after_3_sales';
 
 export interface Database {
   public: {
@@ -83,6 +84,7 @@ export interface Database {
           group_buy_start_date: string | null;
           group_buy_end_date: string | null;
           has_pr_products: boolean;
+          pr_ship_mode: PrShipMode | null;
           pr_products_received: boolean;
           revenue_share_pct: number | null;
           revenue_share_start_unit: number | null;
@@ -99,6 +101,7 @@ export interface Database {
           group_buy_start_date?: string | null;
           group_buy_end_date?: string | null;
           has_pr_products?: boolean;
+          pr_ship_mode?: PrShipMode | null;
           pr_products_received?: boolean;
           revenue_share_pct?: number | null;
           revenue_share_start_unit?: number | null;
@@ -114,6 +117,7 @@ export interface Database {
           group_buy_start_date?: string | null;
           group_buy_end_date?: string | null;
           has_pr_products?: boolean;
+          pr_ship_mode?: PrShipMode | null;
           pr_products_received?: boolean;
           revenue_share_pct?: number | null;
           revenue_share_start_unit?: number | null;

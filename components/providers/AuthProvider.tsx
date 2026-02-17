@@ -26,25 +26,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Use getSession (local, fast) instead of getUser (network call)
+    let mounted = true;
+
     const init = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
+        const currentUser = session?.user ?? null;
+        if (!mounted) return;
+        setUser(currentUser);
 
-      if (currentUser) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', currentUser.id)
-          .single();
-        setProfile(data as unknown as Profile);
+        if (currentUser) {
+          const { data } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single();
+          if (!mounted) return;
+          if (data) setProfile(data as unknown as Profile);
+        }
+      } catch (e) {
+        console.error('Auth init error:', e);
+      } finally {
+        if (mounted) setLoading(false);
       }
-
-      setLoading(false);
     };
 
     init();
@@ -52,25 +59,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return;
       const currentUser = session?.user ?? null;
       setUser(currentUser);
 
-      if (currentUser && !profile) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', currentUser.id)
-          .single();
-        setProfile(data as unknown as Profile);
-      } else if (!currentUser) {
+      if (currentUser) {
+        try {
+          const { data } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single();
+          if (mounted && data) setProfile(data as unknown as Profile);
+        } catch (e) {
+          console.error('Profile fetch error:', e);
+        }
+      } else {
         setProfile(null);
       }
 
-      setLoading(false);
+      if (mounted) setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, [supabase]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -86,9 +101,5 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  return useContext(AuthContext);
 }
