@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Tabs, Card, Tag, SpinLoading, Empty } from 'antd-mobile';
+import { Tabs, Card, Tag, Empty, Skeleton } from 'antd-mobile';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StarRating } from '@/components/settlement/StarRating';
 import { useSettlements } from '@/lib/hooks/useSettlements';
@@ -9,7 +9,7 @@ import dayjs from 'dayjs';
 
 export default function StaffSettlementsPage() {
   const [activeTab, setActiveTab] = useState<'pending' | 'settled'>('pending');
-  const { settlements, loading } = useSettlements({
+  const { settlements, pendingKols, loading } = useSettlements({
     settled: activeTab === 'settled',
     staffOnly: true,
   });
@@ -25,11 +25,28 @@ export default function StaffSettlementsPage() {
 
       <div className="p-4">
         {loading ? (
-          <div className="flex justify-center py-8">
-            <SpinLoading />
+          <div className="space-y-3">
+            <Skeleton.Paragraph lineCount={3} animated />
+            <Skeleton.Paragraph lineCount={3} animated />
           </div>
+        ) : activeTab === 'pending' ? (
+          pendingKols.length === 0 ? (
+            <Empty description="沒有待結算項目" />
+          ) : (
+            pendingKols.map((kol) => (
+              <Card key={kol.id} style={{ marginBottom: 12 }}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold">@{kol.ig_handle}</span>
+                  <Tag color="warning" fill="outline">待結算</Tag>
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  開團結束：{dayjs(kol.group_buy_end_date).format('YYYY/MM/DD')}
+                </div>
+              </Card>
+            ))
+          )
         ) : settlements.length === 0 ? (
-          <Empty description={activeTab === 'pending' ? '沒有待結算項目' : '沒有已結算項目'} />
+          <Empty description="沒有已結算項目" />
         ) : (
           settlements.map((settlement) => (
             <Card key={settlement.id} style={{ marginBottom: 12 }}>
@@ -37,9 +54,7 @@ export default function StaffSettlementsPage() {
                 <span className="font-semibold">
                   @{settlement.kol?.ig_handle || '未知'}
                 </span>
-                <Tag color={settlement.is_settled ? 'success' : 'warning'} fill="outline">
-                  {settlement.is_settled ? '已結算' : '待結算'}
-                </Tag>
+                <Tag color="success" fill="outline">已結算</Tag>
               </div>
 
               {settlement.sales_rating != null && settlement.sales_rating > 0 && (
@@ -47,7 +62,7 @@ export default function StaffSettlementsPage() {
               )}
 
               <div className="flex items-center justify-between mt-2">
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
                   {settlement.period_start && settlement.period_end
                     ? `${dayjs(settlement.period_start).format('MM/DD')} - ${dayjs(settlement.period_end).format('MM/DD')}`
                     : dayjs(settlement.created_at).format('YYYY/MM/DD')}
