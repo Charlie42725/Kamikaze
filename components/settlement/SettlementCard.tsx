@@ -31,7 +31,7 @@ export function SettlementCard({ settlement }: SettlementCardProps) {
         <StarRating value={settlement.sales_rating} readonly />
       )}
       <div className="flex items-center justify-between mt-2">
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-gray-500 dark:text-gray-400">
           {settlement.period_start && settlement.period_end
             ? `${dayjs(settlement.period_start).format('MM/DD')} - ${dayjs(settlement.period_end).format('MM/DD')}`
             : dayjs(settlement.created_at).format('YYYY/MM/DD')}

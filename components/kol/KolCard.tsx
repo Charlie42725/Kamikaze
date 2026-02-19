@@ -30,7 +30,7 @@ export function KolCard({ kol, basePath }: KolCardProps) {
             <KolStatusBadge status={kol.status} />
           </div>
           {kol.group_buy_end_date && (
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
               開團結束：{dayjs(kol.group_buy_end_date).format('YYYY/MM/DD')}
             </div>
           )}

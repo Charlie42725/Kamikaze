@@ -129,7 +129,7 @@ export default function AdminDashboard() {
           ) : (
             <>
               <div className="text-2xl font-bold text-blue-500">{kols.length}</div>
-              <div className="text-xs text-gray-500">全部網紅</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">全部網紅</div>
             </>
           )}
         </Card>
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
           ) : (
             <>
               <div className="text-2xl font-bold text-green-500">{activeKols.length}</div>
-              <div className="text-xs text-gray-500">進行中</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">進行中</div>
             </>
           )}
         </Card>
@@ -149,7 +149,7 @@ export default function AdminDashboard() {
           ) : (
             <>
               <div className="text-2xl font-bold text-gray-500">{endedKols.length}</div>
-              <div className="text-xs text-gray-500">已結束</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">已結束</div>
             </>
           )}
         </Card>
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
           ) : (
             <>
               <div className="text-2xl font-bold text-orange-500">{reminders.pendingSettlements.length}</div>
-              <div className="text-xs text-gray-500">待結算</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">待結算</div>
             </>
           )}
         </Card>
@@ -172,7 +172,7 @@ export default function AdminDashboard() {
           ) : (
             <>
               <div className="text-2xl font-bold text-purple-500">{reminders.pendingPr.length}</div>
-              <div className="text-xs text-gray-500">待寄公關品</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">待寄公關品</div>
             </>
           )}
         </Card>
@@ -205,15 +205,15 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-3 gap-2 py-2">
                 <div className="text-center">
                   <div className="text-lg font-bold text-green-500">{group.active}</div>
-                  <div className="text-xs text-gray-500">進行中</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">進行中</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-bold text-yellow-500">{group.potential}</div>
-                  <div className="text-xs text-gray-500">潛在</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">潛在</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-bold text-gray-400">{group.ended}</div>
-                  <div className="text-xs text-gray-500">已結束</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">已結束</div>
                 </div>
               </div>
             </Collapse.Panel>

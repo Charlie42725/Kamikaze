@@ -64,7 +64,7 @@ export default function StaffDashboard() {
           ) : (
             <>
               <div className="text-2xl font-bold text-blue-500">{kols.length}</div>
-              <div className="text-xs text-gray-500">全部網紅</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">全部網紅</div>
             </>
           )}
         </Card>
@@ -74,7 +74,7 @@ export default function StaffDashboard() {
           ) : (
             <>
               <div className="text-2xl font-bold text-green-500">{activeKols.length}</div>
-              <div className="text-xs text-gray-500">進行中</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">進行中</div>
             </>
           )}
         </Card>
@@ -84,7 +84,7 @@ export default function StaffDashboard() {
           ) : (
             <>
               <div className="text-2xl font-bold text-yellow-500">{potentialKols.length}</div>
-              <div className="text-xs text-gray-500">潛在</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">潛在</div>
             </>
           )}
         </Card>
@@ -97,7 +97,7 @@ export default function StaffDashboard() {
           ) : (
             <>
               <div className="text-2xl font-bold text-orange-500">{pendingSettlements.length}</div>
-              <div className="text-xs text-gray-500">我的結算</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">我的結算</div>
             </>
           )}
         </Card>
