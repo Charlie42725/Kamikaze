@@ -80,7 +80,7 @@ export default function LoginPage() {
             letterSpacing: 2,
           }}
         >
-          神風系統
+          神風特攻隊
         </h1>
         <p
           style={{

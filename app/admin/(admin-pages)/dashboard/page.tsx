@@ -222,7 +222,7 @@ export default function AdminDashboard() {
       )}
 
       <h3 className="text-base font-semibold mb-3 mt-6">待處理提醒</h3>
-      <ReminderList basePath="/admin/kols" data={reminders} />
+      <ReminderList basePath="/admin/kols" data={reminders} staffMap={staffMap} />
     </div>
   );
 }

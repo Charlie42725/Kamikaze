@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { List, Switch, Tag, Empty, Skeleton, Toast } from 'antd-mobile';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
@@ -85,6 +85,21 @@ export default function AdminPrProductsPage() {
     return '直接寄出';
   };
 
+  const staffGroups = useMemo(() => {
+    const groups: Record<string, KolWithStaff[]> = {};
+    for (const kol of kols) {
+      const key = kol.staff_id || '_unassigned';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(kol);
+    }
+    return Object.entries(groups)
+      .map(([key, items]) => ({
+        staffName: key === '_unassigned' ? '未指派' : (items[0]?.staffName || '未知'),
+        items,
+      }))
+      .sort((a, b) => a.staffName.localeCompare(b.staffName));
+  }, [kols]);
+
   if (loading) {
     return (
       <div>
@@ -104,16 +119,13 @@ export default function AdminPrProductsPage() {
         <Empty description="目前沒有待寄公關品" style={{ padding: '64px 0' }} />
       )}
 
-      {kols.length > 0 && (
-        <List header={`待處理 (${kols.length})`}>
-          {kols.map((kol) => (
+      {staffGroups.map((group) => (
+        <List key={group.staffName} header={`${group.staffName} (${group.items.length})`}>
+          {group.items.map((kol) => (
             <List.Item
               key={kol.id}
               description={
                 <div className="flex flex-col gap-2 mt-2">
-                  {kol.staffName && (
-                    <div className="text-xs text-gray-400">負責人：{kol.staffName}</div>
-                  )}
                   <div className="flex items-center justify-between">
                     <span className="text-sm">已提醒寄出</span>
                     <Tag color={kol.pr_ship_reminded ? 'success' : 'default'}>
@@ -145,7 +157,7 @@ export default function AdminPrProductsPage() {
             </List.Item>
           ))}
         </List>
-      )}
+      ))}
     </div>
   );
 }

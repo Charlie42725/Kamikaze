@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: '神風系統 - KOL 管理',
-    short_name: '神風系統',
+    name: '神風特攻隊 - KOL 管理',
+    short_name: '神風特攻隊',
     description: 'KOL 網紅管理系統',
     start_url: '/',
     display: 'standalone',
