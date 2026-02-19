@@ -8,6 +8,10 @@ import './globals.css';
 export const metadata: Metadata = {
   title: '神風系統 - KOL 管理',
   description: 'KOL 網紅管理系統',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/icons/apple-touch-icon.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
