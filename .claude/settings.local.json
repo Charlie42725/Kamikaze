@@ -12,7 +12,12 @@
       "WebFetch(domain:github.com)",
       "Bash(ls:*)",
       "Bash(npx next build:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "WebFetch(domain:www.buildwithmatija.com)",
+      "WebFetch(domain:blog.logrocket.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:serwist.pages.dev)",
+      "Bash(npm uninstall:*)"
     ]
   }
 }

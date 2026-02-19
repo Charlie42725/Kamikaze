@@ -3,6 +3,7 @@ import { SupabaseProvider } from '@/components/providers/SupabaseProvider';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { AntdProvider } from '@/components/providers/AntdProvider';
+import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -42,6 +43,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
+        <ServiceWorkerRegister />
         <SupabaseProvider>
           <AuthProvider>
             <ThemeProvider>

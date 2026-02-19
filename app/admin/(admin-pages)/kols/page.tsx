@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Tabs, Skeleton, Empty, SearchBar } from 'antd-mobile';
+import { Tabs, Skeleton, Empty, SearchBar, Collapse, Tag } from 'antd-mobile';
 import { KolCard } from '@/components/kol/KolCard';
 import { useKols } from '@/lib/hooks/useKols';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
@@ -46,6 +46,7 @@ export default function AdminKolsPage() {
     }
     return Object.entries(groups)
       .map(([key, items]) => ({
+        key,
         staffName: key === '_unassigned' ? '未指派' : (staffMap[key] || '未知'),
         items,
       }))
@@ -79,16 +80,25 @@ export default function AdminKolsPage() {
         ) : filteredKols.length === 0 ? (
           <Empty description="尚無網紅資料" />
         ) : (
-          staffGroups.map((group) => (
-            <div key={group.staffName}>
-              <div className="text-sm font-semibold text-gray-500 dark:text-gray-400 mt-4 mb-2">
-                {group.staffName} ({group.items.length})
-              </div>
-              {group.items.map((kol) => (
-                <KolCard key={kol.id} kol={kol} basePath="/admin/kols" />
-              ))}
-            </div>
-          ))
+          <Collapse defaultActiveKey={staffGroups.map((g) => g.key)}>
+            {staffGroups.map((group) => (
+              <Collapse.Panel
+                key={group.key}
+                title={
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">{group.staffName}</span>
+                    <Tag color="primary" fill="outline" style={{ fontSize: 10 }}>
+                      {group.items.length} 位
+                    </Tag>
+                  </div>
+                }
+              >
+                {group.items.map((kol) => (
+                  <KolCard key={kol.id} kol={kol} basePath="/admin/kols" />
+                ))}
+              </Collapse.Panel>
+            ))}
+          </Collapse>
         )}
       </div>
     </div>

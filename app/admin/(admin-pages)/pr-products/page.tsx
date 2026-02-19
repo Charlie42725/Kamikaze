@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { List, Switch, Tag, Empty, Skeleton, Toast } from 'antd-mobile';
+import { List, Switch, Tag, Empty, Skeleton, Toast, Collapse } from 'antd-mobile';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
 import type { Kol, Profile } from '@/lib/types/database';
@@ -33,7 +33,6 @@ export default function AdminPrProductsPage() {
 
       const kolList = (data as unknown as Kol[]) ?? [];
 
-      // Fetch staff names
       const staffIds = [...new Set(kolList.map((k) => k.staff_id).filter(Boolean))] as string[];
       let staffMap: Record<string, string> = {};
       if (staffIds.length > 0) {
@@ -94,6 +93,7 @@ export default function AdminPrProductsPage() {
     }
     return Object.entries(groups)
       .map(([key, items]) => ({
+        key,
         staffName: key === '_unassigned' ? '未指派' : (items[0]?.staffName || '未知'),
         items,
       }))
@@ -115,49 +115,63 @@ export default function AdminPrProductsPage() {
     <div>
       <PageHeader title="公關品管理" />
 
-      {kols.length === 0 && (
+      {kols.length === 0 ? (
         <Empty description="目前沒有待寄公關品" style={{ padding: '64px 0' }} />
-      )}
-
-      {staffGroups.map((group) => (
-        <List key={group.staffName} header={`${group.staffName} (${group.items.length})`}>
-          {group.items.map((kol) => (
-            <List.Item
-              key={kol.id}
-              description={
-                <div className="flex flex-col gap-2 mt-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">已提醒寄出</span>
-                    <Tag color={kol.pr_ship_reminded ? 'success' : 'default'}>
-                      {kol.pr_ship_reminded ? '已提醒' : '未提醒'}
-                    </Tag>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">已寄出</span>
-                    <Switch
-                      checked={kol.pr_shipped}
-                      onChange={(checked) => handleToggleShipped(kol.id, checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">已收到</span>
-                    <Tag color={kol.pr_products_received ? 'success' : 'default'}>
-                      {kol.pr_products_received ? '已收到' : '未收到'}
-                    </Tag>
-                  </div>
+      ) : (
+        <Collapse defaultActiveKey={staffGroups.map((g) => g.key)}>
+          {staffGroups.map((group) => (
+            <Collapse.Panel
+              key={group.key}
+              title={
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">{group.staffName}</span>
+                  <Tag color="primary" fill="outline" style={{ fontSize: 10 }}>
+                    {group.items.length} 筆
+                  </Tag>
                 </div>
               }
             >
-              <div className="flex items-center gap-2">
-                <span className="font-medium">@{kol.ig_handle}</span>
-                <Tag color="primary" fill="outline" style={{ fontSize: 10 }}>
-                  {shipModeLabel(kol.pr_ship_mode)}
-                </Tag>
-              </div>
-            </List.Item>
+              <List>
+                {group.items.map((kol) => (
+                  <List.Item
+                    key={kol.id}
+                    description={
+                      <div className="flex flex-col gap-2 mt-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm">已提醒寄出</span>
+                          <Tag color={kol.pr_ship_reminded ? 'success' : 'default'}>
+                            {kol.pr_ship_reminded ? '已提醒' : '未提醒'}
+                          </Tag>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm">已寄出</span>
+                          <Switch
+                            checked={kol.pr_shipped}
+                            onChange={(checked) => handleToggleShipped(kol.id, checked)}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm">已收到</span>
+                          <Tag color={kol.pr_products_received ? 'success' : 'default'}>
+                            {kol.pr_products_received ? '已收到' : '未收到'}
+                          </Tag>
+                        </div>
+                      </div>
+                    }
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">@{kol.ig_handle}</span>
+                      <Tag color="primary" fill="outline" style={{ fontSize: 10 }}>
+                        {shipModeLabel(kol.pr_ship_mode)}
+                      </Tag>
+                    </div>
+                  </List.Item>
+                ))}
+              </List>
+            </Collapse.Panel>
           ))}
-        </List>
-      ))}
+        </Collapse>
+      )}
     </div>
   );
 }
