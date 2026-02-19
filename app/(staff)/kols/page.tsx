@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Tabs, SpinLoading, Empty, FloatingBubble, Skeleton } from 'antd-mobile';
+import { Tabs, Empty, Skeleton } from 'antd-mobile';
 import { AddOutline } from 'antd-mobile-icons';
 import { useRouter } from 'next/navigation';
 import { KolCard } from '@/components/kol/KolCard';
@@ -42,16 +42,27 @@ export default function KolsPage() {
         )}
       </div>
 
-      <FloatingBubble
+      <div
         style={{
-          '--initial-position-bottom': '80px',
-          '--initial-position-right': '24px',
-          '--edge-distance': '24px',
+          position: 'fixed',
+          bottom: 'calc(60px + env(safe-area-inset-bottom))',
+          right: 24,
+          zIndex: 999,
+          width: 48,
+          height: 48,
+          borderRadius: '50%',
+          background: 'var(--adm-color-primary, #1677ff)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#fff',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          cursor: 'pointer',
         }}
         onClick={() => router.push(ROUTES.STAFF.KOL_ADD)}
       >
         <AddOutline fontSize={24} />
-      </FloatingBubble>
+      </div>
     </div>
   );
 }
