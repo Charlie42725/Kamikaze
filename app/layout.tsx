@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { SupabaseProvider } from '@/components/providers/SupabaseProvider';
 import { AuthProvider } from '@/components/providers/AuthProvider';
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { AntdProvider } from '@/components/providers/AntdProvider';
 import './globals.css';
 
@@ -28,11 +29,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-TW">
+    <html lang="zh-TW" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'){document.documentElement.classList.add('dark');document.documentElement.setAttribute('data-prefers-color-scheme','dark')}}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className="antialiased">
         <SupabaseProvider>
           <AuthProvider>
-            <AntdProvider>{children}</AntdProvider>
+            <ThemeProvider>
+              <AntdProvider>{children}</AntdProvider>
+            </ThemeProvider>
           </AuthProvider>
         </SupabaseProvider>
       </body>

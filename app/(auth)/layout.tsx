@@ -11,7 +11,7 @@ export default function AuthLayout({
         alignItems: 'center',
         minHeight: '100dvh',
         padding: '24px 16px',
-        background: '#f5f5f5',
+        background: 'var(--bg-secondary)',
       }}
     >
       {children}

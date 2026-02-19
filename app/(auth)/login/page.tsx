@@ -64,10 +64,10 @@ export default function LoginPage() {
       style={{
         width: '100%',
         maxWidth: 400,
-        background: '#fff',
+        background: 'var(--bg-card)',
         borderRadius: 16,
         padding: '40px 24px 32px',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+        boxShadow: '0 8px 32px var(--shadow-color)',
       }}
     >
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
@@ -75,7 +75,7 @@ export default function LoginPage() {
           style={{
             fontSize: 28,
             fontWeight: 700,
-            color: '#1a1a2e',
+            color: 'var(--text-primary)',
             margin: 0,
             letterSpacing: 2,
           }}
@@ -85,7 +85,7 @@ export default function LoginPage() {
         <p
           style={{
             fontSize: 14,
-            color: '#999',
+            color: 'var(--text-secondary)',
             marginTop: 8,
           }}
         >

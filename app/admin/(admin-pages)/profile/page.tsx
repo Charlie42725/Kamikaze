@@ -1,11 +1,13 @@
 'use client';
 
-import { List, Button, Avatar, Dialog, Card } from 'antd-mobile';
+import { List, Button, Avatar, Dialog, Card, Switch } from 'antd-mobile';
 import { useAuth } from '@/components/providers/AuthProvider';
+import { useTheme } from '@/components/providers/ThemeProvider';
 import { useRouter } from 'next/navigation';
 
 export default function AdminProfilePage() {
   const { profile, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -35,6 +37,16 @@ export default function AdminProfilePage() {
       </Card>
 
       <List>
+        <List.Item
+          extra={
+            <Switch
+              checked={theme === 'dark'}
+              onChange={toggleTheme}
+            />
+          }
+        >
+          深色模式
+        </List.Item>
         <List.Item onClick={() => {}}>帳號設定</List.Item>
         <List.Item onClick={() => {}}>通知設定</List.Item>
       </List>

@@ -10,7 +10,8 @@
       "WebSearch",
       "Bash(npm ls:*)",
       "WebFetch(domain:github.com)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(npx next build:*)"
     ]
   }
 }
