@@ -45,7 +45,7 @@ export default function KolsPage() {
       <div
         style={{
           position: 'fixed',
-          bottom: 'calc(70px + env(safe-area-inset-bottom))',
+          bottom: 'calc(80px + env(safe-area-inset-bottom))',
           right: 24,
           zIndex: 999,
           width: 48,

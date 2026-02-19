@@ -38,7 +38,11 @@ export default function ProfilePage() {
         </div>
       </Card>
 
-      <List>
+      <List header="功能">
+        <List.Item onClick={() => router.push('/checkin')}>打卡</List.Item>
+      </List>
+
+      <List header="設定">
         <List.Item
           extra={
             <Switch
@@ -49,8 +53,6 @@ export default function ProfilePage() {
         >
           深色模式
         </List.Item>
-        <List.Item onClick={() => {}}>帳號設定</List.Item>
-        <List.Item onClick={() => {}}>通知設定</List.Item>
       </List>
 
       <div className="mt-8 px-4">
