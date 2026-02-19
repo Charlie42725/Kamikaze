@@ -77,11 +77,12 @@ body {
   right: 0;
   z-index: 100;
   background: var(--bg-primary);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-top: 8px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--border-color);
 }
 
 /* Page padding to account for tab bar */
 .page-with-tabbar {
-  padding-bottom: calc(50px + env(safe-area-inset-bottom));
+  padding-bottom: calc(70px + env(safe-area-inset-bottom));
 }
