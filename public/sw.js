@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kamikaze-v1';
+const CACHE_NAME = 'kamikaze-v2';
 
 // Install: cache app shell
 self.addEventListener('install', (event) => {
