@@ -53,8 +53,10 @@ export function SettlementForm({
 
       await onSubmit(data);
       Toast.show({ content: '儲存成功', icon: 'success' });
-    } catch {
-      Toast.show({ content: '儲存失敗', icon: 'fail' });
+    } catch (e: unknown) {
+      const err = e as { message?: string; code?: string; details?: string; hint?: string };
+      console.error('Settlement save error:', err.message, err.code, err.details, err.hint);
+      Toast.show({ content: err.message || '儲存失敗', icon: 'fail' });
     } finally {
       setLoading(false);
     }
