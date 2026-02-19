@@ -3,7 +3,7 @@
 import { Card } from 'antd-mobile';
 import { useRouter } from 'next/navigation';
 import { KolStatusBadge } from './KolStatusBadge';
-import { ROUTES } from '@/lib/constants';
+import { ROUTES, getKolDisplayStatus } from '@/lib/constants';
 import type { Kol } from '@/lib/types/database';
 import dayjs from 'dayjs';
 
@@ -29,11 +29,15 @@ export function KolCard({ kol, basePath }: KolCardProps) {
             <span className="font-semibold text-base">@{kol.ig_handle}</span>
             <KolStatusBadge status={kol.status} groupBuyStartDate={kol.group_buy_start_date} />
           </div>
-          {kol.group_buy_end_date && (
+          {getKolDisplayStatus(kol) === 'upcoming' && kol.group_buy_start_date ? (
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              開團日期：{dayjs(kol.group_buy_start_date).format('YYYY/MM/DD')}
+            </div>
+          ) : kol.group_buy_end_date ? (
             <div className="text-xs text-gray-500 dark:text-gray-400">
               開團結束：{dayjs(kol.group_buy_end_date).format('YYYY/MM/DD')}
             </div>
-          )}
+          ) : null}
           {kol.notes && (
             <div className="text-xs text-gray-400 mt-1 truncate max-w-[200px]">
               {kol.notes}

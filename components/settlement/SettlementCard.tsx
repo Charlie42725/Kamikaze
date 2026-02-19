@@ -8,7 +8,7 @@ import type { Settlement } from '@/lib/types/database';
 import dayjs from 'dayjs';
 
 interface SettlementCardProps {
-  settlement: Settlement & { kol?: { ig_handle: string } };
+  settlement: Settlement & { kol?: { ig_handle: string; group_buy_start_date?: string | null; group_buy_end_date?: string | null } };
 }
 
 export function SettlementCard({ settlement }: SettlementCardProps) {
@@ -34,6 +34,13 @@ export function SettlementCard({ settlement }: SettlementCardProps) {
         <div className="text-sm mt-1">
           <span className="text-gray-500 dark:text-gray-400">銷售金額</span>{' '}
           <span className="font-semibold">NT$ {settlement.sales_amount.toLocaleString()}</span>
+        </div>
+      )}
+      {(settlement.kol?.group_buy_start_date || settlement.kol?.group_buy_end_date) && (
+        <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          開團：{settlement.kol.group_buy_start_date ? dayjs(settlement.kol.group_buy_start_date).format('YYYY/MM/DD') : '?'}
+          {' ~ '}
+          {settlement.kol.group_buy_end_date ? dayjs(settlement.kol.group_buy_end_date).format('YYYY/MM/DD') : '?'}
         </div>
       )}
       <div className="flex items-center justify-between mt-2">

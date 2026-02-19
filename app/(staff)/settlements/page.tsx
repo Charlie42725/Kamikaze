@@ -40,7 +40,9 @@ export default function StaffSettlementsPage() {
                   <Tag color="warning" fill="outline">待結算</Tag>
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                  開團結束：{dayjs(kol.group_buy_end_date).format('YYYY/MM/DD')}
+                  開團：{kol.group_buy_start_date ? dayjs(kol.group_buy_start_date).format('YYYY/MM/DD') : '?'}
+                  {' ~ '}
+                  {kol.group_buy_end_date ? dayjs(kol.group_buy_end_date).format('YYYY/MM/DD') : '?'}
                 </div>
               </Card>
             ))

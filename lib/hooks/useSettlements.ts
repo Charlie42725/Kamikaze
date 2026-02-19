@@ -9,6 +9,8 @@ type SettlementWithKol = Settlement & {
   kol?: {
     ig_handle: string;
     staff_id: string | null;
+    group_buy_start_date: string | null;
+    group_buy_end_date: string | null;
     staff?: { display_name: string } | null;
   };
 };
@@ -81,7 +83,7 @@ export function useSettlements(options: UseSettlementsOptions = {}) {
         // "已結算" — query settlements table
         let query = supabase
           .from('settlements')
-          .select('*, kol:kols(ig_handle, staff_id, staff:profiles(display_name))')
+          .select('*, kol:kols(ig_handle, staff_id, group_buy_start_date, group_buy_end_date, staff:profiles(display_name))')
           .eq('is_settled', true)
           .order('settled_at', { ascending: false });
 
@@ -158,7 +160,7 @@ export function useSettlements(options: UseSettlementsOptions = {}) {
   const getSettlement = async (id: string) => {
     const { data, error } = await supabase
       .from('settlements')
-      .select('*, kol:kols(ig_handle, staff_id, staff:profiles(display_name))')
+      .select('*, kol:kols(ig_handle, staff_id, group_buy_start_date, group_buy_end_date, staff:profiles(display_name))')
       .eq('id', id)
       .single();
     if (error) throw error;
