@@ -116,7 +116,7 @@ export default function AdminPrProductsPage() {
     }
 
     return (
-      <Collapse defaultActiveKey={groups.map((g) => g.key)}>
+      <Collapse>
         {groups.map((group) => (
           <Collapse.Panel
             key={group.key}

@@ -91,7 +91,7 @@ export default function AdminKolsPage() {
         ) : filteredKols.length === 0 ? (
           <Empty description="尚無網紅資料" />
         ) : (
-          <Collapse defaultActiveKey={staffGroups.map((g) => g.key)}>
+          <Collapse>
             {staffGroups.map((group) => (
               <Collapse.Panel
                 key={group.key}
