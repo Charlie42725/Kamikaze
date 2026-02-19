@@ -24,6 +24,18 @@
   --text-secondary: #a0a0a0;
   --border-color: #303030;
   --shadow-color: rgba(0, 0, 0, 0.4);
+
+  /* Antd Mobile Dark Mode Overrides */
+  --adm-color-background: var(--bg-primary);
+  --adm-color-box: var(--bg-card);
+  --adm-color-text: var(--text-primary);
+  --adm-color-text-secondary: var(--text-secondary);
+  --adm-color-weak: var(--text-secondary);
+  --adm-color-light: #666666;
+  --adm-color-border: var(--border-color);
+  --adm-button-background-color: var(--bg-card);
+  --adm-skeleton-background: #303030;
+  --adm-skeleton-light: #404040;
 }
 
 html, body {
