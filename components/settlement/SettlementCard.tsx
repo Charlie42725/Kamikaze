@@ -50,6 +50,11 @@ export function SettlementCard({ settlement }: SettlementCardProps) {
           )}
         </span>
       </div>
+      {settlement.notes && (
+        <div className="text-sm text-gray-500 dark:text-gray-400 mt-2 truncate">
+          {settlement.notes}
+        </div>
+      )}
     </Card>
   );
 }
