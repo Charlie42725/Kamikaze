@@ -175,15 +175,6 @@ export function KolSopForm({
               </Space>
             </Radio.Group>
           </Form.Item>
-          <Form.Item name="pr_ship_reminded" label="已提醒寄出" valuePropName="checked" childElementPosition="right">
-            <Switch />
-          </Form.Item>
-          <Form.Item name="pr_shipped" label="已寄出" valuePropName="checked" childElementPosition="right">
-            <Switch />
-          </Form.Item>
-          <Form.Item name="pr_products_received" label="已收到公關品" valuePropName="checked" childElementPosition="right">
-            <Switch />
-          </Form.Item>
         </>
       )}
 

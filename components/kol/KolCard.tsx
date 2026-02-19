@@ -1,6 +1,6 @@
 'use client';
 
-import { Card } from 'antd-mobile';
+import { Card, Tag } from 'antd-mobile';
 import { useRouter } from 'next/navigation';
 import { KolStatusBadge } from './KolStatusBadge';
 import { ROUTES, getKolDisplayStatus } from '@/lib/constants';
@@ -8,7 +8,7 @@ import type { Kol } from '@/lib/types/database';
 import dayjs from 'dayjs';
 
 interface KolCardProps {
-  kol: Kol;
+  kol: Kol & { productNames?: string[] };
   basePath?: string;
 }
 
@@ -38,6 +38,15 @@ export function KolCard({ kol, basePath }: KolCardProps) {
               開團結束：{dayjs(kol.group_buy_end_date).format('YYYY/MM/DD')}
             </div>
           ) : null}
+          {kol.productNames && kol.productNames.length > 0 && (
+            <div className="flex gap-1 mt-1 flex-wrap">
+              {kol.productNames.map((name) => (
+                <Tag key={name} color="default" fill="outline" style={{ fontSize: 10 }}>
+                  {name}
+                </Tag>
+              ))}
+            </div>
+          )}
           {kol.notes && (
             <div className="text-xs text-gray-400 mt-1 truncate max-w-[200px]">
               {kol.notes}

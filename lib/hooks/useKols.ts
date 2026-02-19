@@ -5,10 +5,12 @@ import { useSupabase } from '@/components/providers/SupabaseProvider';
 import { useAuth } from '@/components/providers/AuthProvider';
 import type { Kol, KolInsert, KolUpdate, KolStatus } from '@/lib/types/database';
 
+export type KolWithProducts = Kol & { productNames?: string[] };
+
 export function useKols(statusFilter?: KolStatus | 'all') {
   const supabase = useSupabase();
   const { profile, loading: authLoading } = useAuth();
-  const [kols, setKols] = useState<Kol[]>([]);
+  const [kols, setKols] = useState<KolWithProducts[]>([]);
   const [loading, setLoading] = useState(true);
   const fetchedRef = useRef(false);
 
@@ -18,7 +20,7 @@ export function useKols(statusFilter?: KolStatus | 'all') {
   const fetchKols = useCallback(async () => {
     try {
       setLoading(true);
-      let query = supabase.from('kols').select('*').order('group_buy_start_date', { ascending: false, nullsFirst: false });
+      let query = supabase.from('kols').select('*, kol_products(product:products(name))').order('group_buy_start_date', { ascending: false, nullsFirst: false });
 
       if (profileRole === 'staff' && profileId) {
         query = query.eq('staff_id', profileId);
@@ -30,7 +32,15 @@ export function useKols(statusFilter?: KolStatus | 'all') {
 
       const { data, error } = await query;
       if (error) console.error('fetchKols query error:', error);
-      setKols((data as unknown as Kol[]) ?? []);
+      const raw = (data ?? []) as unknown as (Kol & { kol_products?: { product: { name: string } | null }[] })[];
+      setKols(
+        raw.map((k) => {
+          const productNames = (k.kol_products ?? [])
+            .map((kp) => kp.product?.name)
+            .filter(Boolean) as string[];
+          return { ...k, productNames };
+        })
+      );
     } catch (e) {
       console.error('fetchKols error:', e);
       setKols([]);
