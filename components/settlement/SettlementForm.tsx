@@ -5,14 +5,12 @@ import {
   Form,
   Input,
   Button,
-  DatePicker,
   TextArea,
   Toast,
   Switch,
 } from 'antd-mobile';
 import { StarRating } from './StarRating';
 import type { SettlementInsert, SettlementUpdate, Settlement } from '@/lib/types/database';
-import dayjs from 'dayjs';
 
 interface SettlementFormProps {
   initialData?: Settlement;
@@ -39,6 +37,9 @@ export function SettlementForm({
       const data: SettlementInsert = {
         kol_id: kolId,
         sales_rating: rating || null,
+        sales_amount: values.sales_amount
+          ? parseFloat(values.sales_amount)
+          : null,
         kol_amount: values.kol_amount
           ? parseFloat(values.kol_amount)
           : null,
@@ -47,12 +48,6 @@ export function SettlementForm({
           : null,
         is_settled: values.is_settled || false,
         settled_at: values.is_settled ? new Date().toISOString() : null,
-        period_start: values.period_start
-          ? dayjs(values.period_start).format('YYYY-MM-DD')
-          : null,
-        period_end: values.period_end
-          ? dayjs(values.period_end).format('YYYY-MM-DD')
-          : null,
         notes: values.notes || null,
       };
 
@@ -71,15 +66,10 @@ export function SettlementForm({
       initialValues={
         initialData
           ? {
+              sales_amount: initialData.sales_amount?.toString() || '',
               kol_amount: initialData.kol_amount?.toString() || '',
               marketing_amount: initialData.marketing_amount?.toString() || '',
               is_settled: initialData.is_settled,
-              period_start: initialData.period_start
-                ? new Date(initialData.period_start)
-                : undefined,
-              period_end: initialData.period_end
-                ? new Date(initialData.period_end)
-                : undefined,
               notes: initialData.notes || '',
             }
           : { is_settled: false }
@@ -97,34 +87,16 @@ export function SettlementForm({
         <StarRating value={rating} onChange={setRating} />
       </Form.Item>
 
-      <Form.Item name="kol_amount" label="網紅金額 (NT$)">
-        <Input type="number" placeholder="請輸入網紅金額" />
+      <Form.Item name="sales_amount" label="銷售金額 (NT$)">
+        <Input type="number" placeholder="請輸入銷售金額" />
       </Form.Item>
 
-      <Form.Item name="marketing_amount" label="行銷金額 (NT$)">
-        <Input type="number" placeholder="請輸入行銷金額" />
+      <Form.Item name="kol_amount" label="網紅分潤 (NT$)">
+        <Input type="number" placeholder="請輸入網紅分潤" />
       </Form.Item>
 
-      <Form.Item
-        name="period_start"
-        label="結算起始"
-        trigger="onConfirm"
-        onClick={(_, datePickerRef) => datePickerRef.current?.open()}
-      >
-        <DatePicker>
-          {(value) => (value ? dayjs(value).format('YYYY/MM/DD') : '請選擇日期')}
-        </DatePicker>
-      </Form.Item>
-
-      <Form.Item
-        name="period_end"
-        label="結算結束"
-        trigger="onConfirm"
-        onClick={(_, datePickerRef) => datePickerRef.current?.open()}
-      >
-        <DatePicker>
-          {(value) => (value ? dayjs(value).format('YYYY/MM/DD') : '請選擇日期')}
-        </DatePicker>
+      <Form.Item name="marketing_amount" label="行銷分潤 (NT$)">
+        <Input type="number" placeholder="請輸入行銷分潤" />
       </Form.Item>
 
       <Form.Item name="is_settled" label="已結算" valuePropName="checked">

@@ -61,17 +61,26 @@ export default function StaffSettlementsPage() {
                 <StarRating value={settlement.sales_rating} readonly />
               )}
 
+              {settlement.sales_amount != null && (
+                <div className="text-sm mt-1">
+                  <span className="text-gray-500 dark:text-gray-400">銷售金額</span>{' '}
+                  <span className="font-semibold">NT$ {settlement.sales_amount.toLocaleString()}</span>
+                </div>
+              )}
+
               <div className="flex items-center justify-between mt-2">
                 <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {settlement.period_start && settlement.period_end
-                    ? `${dayjs(settlement.period_start).format('MM/DD')} - ${dayjs(settlement.period_end).format('MM/DD')}`
-                    : dayjs(settlement.created_at).format('YYYY/MM/DD')}
+                  {dayjs(settlement.created_at).format('YYYY/MM/DD')}
                 </span>
-                {settlement.marketing_amount != null && (
-                  <span className="font-semibold text-green-500">
-                    行銷 NT$ {settlement.marketing_amount}
-                  </span>
-                )}
+                <span className="font-semibold text-sm">
+                  {settlement.kol_amount != null && (
+                    <span className="text-blue-500">網紅 NT$ {settlement.kol_amount.toLocaleString()}</span>
+                  )}
+                  {settlement.kol_amount != null && settlement.marketing_amount != null && ' / '}
+                  {settlement.marketing_amount != null && (
+                    <span className="text-green-500">行銷 NT$ {settlement.marketing_amount.toLocaleString()}</span>
+                  )}
+                </span>
               </div>
             </Card>
           ))

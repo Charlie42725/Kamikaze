@@ -213,6 +213,7 @@ export interface Database {
           id: string;
           kol_id: string;
           sales_rating: number | null;
+          sales_amount: number | null;
           kol_amount: number | null;
           marketing_amount: number | null;
           is_settled: boolean;
@@ -228,6 +229,7 @@ export interface Database {
           id?: string;
           kol_id: string;
           sales_rating?: number | null;
+          sales_amount?: number | null;
           kol_amount?: number | null;
           marketing_amount?: number | null;
           is_settled?: boolean;
@@ -242,6 +244,7 @@ export interface Database {
         Update: {
           kol_id?: string;
           sales_rating?: number | null;
+          sales_amount?: number | null;
           kol_amount?: number | null;
           marketing_amount?: number | null;
           is_settled?: boolean;

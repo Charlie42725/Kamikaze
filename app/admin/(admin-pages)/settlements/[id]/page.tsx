@@ -46,6 +46,7 @@ export default function SettlementDetailPage() {
             id: '',
             kol_id: id,
             sales_rating: null,
+            sales_amount: null,
             kol_amount: null,
             marketing_amount: null,
             is_settled: false,
