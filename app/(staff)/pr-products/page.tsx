@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { List, Switch, Tag, Empty, Skeleton, Toast } from 'antd-mobile';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { List, Switch, Tag, Empty, Skeleton, Toast, Tabs } from 'antd-mobile';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
 import { useAuth } from '@/components/providers/AuthProvider';
 import type { Kol } from '@/lib/types/database';
@@ -16,6 +15,7 @@ export default function StaffPrProductsPage() {
   const { profile, loading: authLoading } = useAuth();
   const [kols, setKols] = useState<KolWithProducts[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('direct');
 
   const fetchPrKols = useCallback(async () => {
     if (!profile?.id) return;
@@ -70,15 +70,71 @@ export default function StaffPrProductsPage() {
     }
   };
 
-  const shipModeLabel = (mode: string | null) => {
-    if (mode === 'after_3_sales') return '銷售3件後';
-    return '直接寄出';
+  // Split by ship mode — exclude already received
+  const pendingKols = useMemo(() => kols.filter((k) => !k.pr_products_received), [kols]);
+  const directKols = useMemo(() => pendingKols.filter((k) => k.pr_ship_mode !== 'after_3_sales'), [pendingKols]);
+  const conditionalKols = useMemo(() => pendingKols.filter((k) => k.pr_ship_mode === 'after_3_sales'), [pendingKols]);
+  const completedKols = useMemo(() => kols.filter((k) => k.pr_products_received), [kols]);
+
+  const renderKolList = (items: KolWithProducts[]) => {
+    if (items.length === 0) {
+      return <Empty description="沒有資料" style={{ padding: '32px 0' }} />;
+    }
+
+    return (
+      <List>
+        {items.map((kol) => (
+          <List.Item
+            key={kol.id}
+            description={
+              <div className="flex flex-col gap-2 mt-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">已寄出</span>
+                  <Tag color={kol.pr_shipped ? 'success' : 'default'}>
+                    {kol.pr_shipped ? '已寄出' : '未寄出'}
+                  </Tag>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">已提醒</span>
+                  <Switch
+                    checked={kol.pr_ship_reminded}
+                    onChange={(checked) => handleToggle(kol.id, 'pr_ship_reminded', checked)}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">已收到</span>
+                  <Switch
+                    checked={kol.pr_products_received}
+                    onChange={(checked) => handleToggle(kol.id, 'pr_products_received', checked)}
+                  />
+                </div>
+              </div>
+            }
+          >
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-medium">@{kol.ig_handle}</span>
+            </div>
+            {kol.productNames && kol.productNames.length > 0 && (
+              <div className="flex gap-1 mt-1 flex-wrap">
+                {kol.productNames.map((name) => (
+                  <Tag key={name} color="default" fill="outline" style={{ fontSize: 10 }}>
+                    {name}
+                  </Tag>
+                ))}
+              </div>
+            )}
+          </List.Item>
+        ))}
+      </List>
+    );
   };
 
   if (loading || authLoading) {
     return (
       <div>
-        <PageHeader title="公關品管理" showBack={false} />
+        <div className="px-4 pt-4">
+          <h2 className="text-xl font-bold mb-2">公關品管理</h2>
+        </div>
         <div className="p-4">
           <Skeleton.Paragraph lineCount={5} animated />
         </div>
@@ -86,83 +142,49 @@ export default function StaffPrProductsPage() {
     );
   }
 
-  const pendingKols = kols.filter((k) => !k.pr_products_received);
-  const completedKols = kols.filter((k) => k.pr_products_received);
-
   return (
     <div>
-      <PageHeader title="公關品管理" showBack={false} />
+      <div className="px-4 pt-4">
+        <h2 className="text-xl font-bold mb-2">公關品管理</h2>
+      </div>
 
-      {pendingKols.length === 0 && completedKols.length === 0 && (
-        <Empty description="目前沒有需要公關品的網紅" style={{ padding: '64px 0' }} />
-      )}
+      <Tabs activeKey={activeTab} onChange={setActiveTab}>
+        <Tabs.Tab title={`直接寄出 (${directKols.length})`} key="direct" />
+        <Tabs.Tab title={`銷售3件後 (${conditionalKols.length})`} key="conditional" />
+        {completedKols.length > 0 && (
+          <Tabs.Tab title={`已完成 (${completedKols.length})`} key="completed" />
+        )}
+      </Tabs>
 
-      {pendingKols.length > 0 && (
-        <List header="待處理">
-          {pendingKols.map((kol) => (
-            <List.Item
-              key={kol.id}
-              description={
-                <div className="flex flex-col gap-2 mt-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">已寄出</span>
-                    <Tag color={kol.pr_shipped ? 'success' : 'default'}>
-                      {kol.pr_shipped ? '已寄出' : '未寄出'}
-                    </Tag>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">已提醒寄出</span>
-                    <Switch
-                      checked={kol.pr_ship_reminded}
-                      onChange={(checked) => handleToggle(kol.id, 'pr_ship_reminded', checked)}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">已收到</span>
-                    <Switch
-                      checked={kol.pr_products_received}
-                      onChange={(checked) => handleToggle(kol.id, 'pr_products_received', checked)}
-                    />
-                  </div>
-                </div>
-              }
-            >
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-medium">@{kol.ig_handle}</span>
-                <Tag color="primary" fill="outline" style={{ fontSize: 10 }}>
-                  {shipModeLabel(kol.pr_ship_mode)}
-                </Tag>
-              </div>
-              {kol.productNames && kol.productNames.length > 0 && (
-                <div className="flex gap-1 mt-1 flex-wrap">
-                  {kol.productNames.map((name) => (
-                    <Tag key={name} color="default" fill="outline" style={{ fontSize: 10 }}>
-                      {name}
-                    </Tag>
-                  ))}
-                </div>
-              )}
-            </List.Item>
-          ))}
-        </List>
-      )}
-
-      {completedKols.length > 0 && (
-        <List header="已完成">
-          {completedKols.map((kol) => (
-            <List.Item
-              key={kol.id}
-              extra={
-                <Tag color="success" fill="outline">
-                  已收到
-                </Tag>
-              }
-            >
-              @{kol.ig_handle}
-            </List.Item>
-          ))}
-        </List>
-      )}
+      <div className="p-4">
+        {activeTab === 'direct' && renderKolList(directKols)}
+        {activeTab === 'conditional' && renderKolList(conditionalKols)}
+        {activeTab === 'completed' && (
+          completedKols.length === 0 ? (
+            <Empty description="沒有已完成項目" style={{ padding: '32px 0' }} />
+          ) : (
+            <List>
+              {completedKols.map((kol) => (
+                <List.Item
+                  key={kol.id}
+                  extra={<Tag color="success" fill="outline">已收到</Tag>}
+                >
+                  <span>@{kol.ig_handle}</span>
+                  {kol.productNames && kol.productNames.length > 0 && (
+                    <div className="flex gap-1 mt-1 flex-wrap">
+                      {kol.productNames.map((name) => (
+                        <Tag key={name} color="default" fill="outline" style={{ fontSize: 10 }}>
+                          {name}
+                        </Tag>
+                      ))}
+                    </div>
+                  )}
+                </List.Item>
+              ))}
+            </List>
+          )
+        )}
+      </div>
     </div>
   );
 }

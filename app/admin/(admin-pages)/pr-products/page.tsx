@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { List, Switch, Tag, Empty, Skeleton, Toast, Collapse } from 'antd-mobile';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { List, Switch, Tag, Empty, Skeleton, Toast, Collapse, Tabs } from 'antd-mobile';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
 import type { Kol, Profile } from '@/lib/types/database';
 
@@ -11,10 +10,27 @@ interface KolWithStaff extends Kol {
   productNames?: string[];
 }
 
+function groupByStaff(kols: KolWithStaff[]) {
+  const groups: Record<string, KolWithStaff[]> = {};
+  for (const kol of kols) {
+    const key = kol.staff_id || '_unassigned';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(kol);
+  }
+  return Object.entries(groups)
+    .map(([key, items]) => ({
+      key,
+      staffName: key === '_unassigned' ? '未指派' : (items[0]?.staffName || '未知'),
+      items,
+    }))
+    .sort((a, b) => a.staffName.localeCompare(b.staffName));
+}
+
 export default function AdminPrProductsPage() {
   const supabase = useSupabase();
   const [kols, setKols] = useState<KolWithStaff[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('direct');
 
   const fetchPrKols = useCallback(async () => {
     try {
@@ -87,64 +103,39 @@ export default function AdminPrProductsPage() {
     }
   };
 
-  const shipModeLabel = (mode: string | null) => {
-    if (mode === 'after_3_sales') return '銷售3件後';
-    return '直接寄出';
-  };
+  // Split by ship mode
+  const directKols = useMemo(() => kols.filter((k) => k.pr_ship_mode !== 'after_3_sales'), [kols]);
+  const conditionalKols = useMemo(() => kols.filter((k) => k.pr_ship_mode === 'after_3_sales'), [kols]);
 
-  const staffGroups = useMemo(() => {
-    const groups: Record<string, KolWithStaff[]> = {};
-    for (const kol of kols) {
-      const key = kol.staff_id || '_unassigned';
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(kol);
+  const directGroups = useMemo(() => groupByStaff(directKols), [directKols]);
+  const conditionalGroups = useMemo(() => groupByStaff(conditionalKols), [conditionalKols]);
+
+  const renderKolList = (groups: ReturnType<typeof groupByStaff>, showShipToggle: boolean) => {
+    if (groups.length === 0) {
+      return <Empty description="沒有資料" style={{ padding: '32px 0' }} />;
     }
-    return Object.entries(groups)
-      .map(([key, items]) => ({
-        key,
-        staffName: key === '_unassigned' ? '未指派' : (items[0]?.staffName || '未知'),
-        items,
-      }))
-      .sort((a, b) => a.staffName.localeCompare(b.staffName));
-  }, [kols]);
 
-  if (loading) {
     return (
-      <div>
-        <PageHeader title="公關品管理" />
-        <div className="p-4">
-          <Skeleton.Paragraph lineCount={5} animated />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <PageHeader title="公關品管理" />
-
-      {kols.length === 0 ? (
-        <Empty description="目前沒有待寄公關品" style={{ padding: '64px 0' }} />
-      ) : (
-        <Collapse defaultActiveKey={staffGroups.map((g) => g.key)}>
-          {staffGroups.map((group) => (
-            <Collapse.Panel
-              key={group.key}
-              title={
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold">{group.staffName}</span>
-                  <Tag color="primary" fill="outline" style={{ fontSize: 10 }}>
-                    {group.items.length} 筆
-                  </Tag>
-                </div>
-              }
-            >
-              <List>
-                {group.items.map((kol) => (
-                  <List.Item
-                    key={kol.id}
-                    description={
-                      <div className="flex flex-col gap-2 mt-2">
+      <Collapse defaultActiveKey={groups.map((g) => g.key)}>
+        {groups.map((group) => (
+          <Collapse.Panel
+            key={group.key}
+            title={
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">{group.staffName}</span>
+                <Tag color="primary" fill="outline" style={{ fontSize: 10 }}>
+                  {group.items.length} 筆
+                </Tag>
+              </div>
+            }
+          >
+            <List>
+              {group.items.map((kol) => (
+                <List.Item
+                  key={kol.id}
+                  description={
+                    <div className="flex flex-col gap-2 mt-2">
+                      {showShipToggle && (
                         <div className="flex items-center justify-between">
                           <span className="text-sm">已寄出</span>
                           <Switch
@@ -152,43 +143,63 @@ export default function AdminPrProductsPage() {
                             onChange={(checked) => handleToggleShipped(kol.id, checked)}
                           />
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">已提醒</span>
-                          <Tag color={kol.pr_ship_reminded ? 'success' : 'default'}>
-                            {kol.pr_ship_reminded ? '已提醒' : '未提醒'}
-                          </Tag>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">已收到</span>
-                          <Tag color={kol.pr_products_received ? 'success' : 'default'}>
-                            {kol.pr_products_received ? '已收到' : '未收到'}
-                          </Tag>
-                        </div>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">已提醒</span>
+                        <Tag color={kol.pr_ship_reminded ? 'success' : 'default'}>
+                          {kol.pr_ship_reminded ? '已提醒' : '未提醒'}
+                        </Tag>
                       </div>
-                    }
-                  >
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium">@{kol.ig_handle}</span>
-                      <Tag color="primary" fill="outline" style={{ fontSize: 10 }}>
-                        {shipModeLabel(kol.pr_ship_mode)}
-                      </Tag>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">已收到</span>
+                        <Tag color={kol.pr_products_received ? 'success' : 'default'}>
+                          {kol.pr_products_received ? '已收到' : '未收到'}
+                        </Tag>
+                      </div>
                     </div>
-                    {kol.productNames && kol.productNames.length > 0 && (
-                      <div className="flex gap-1 mt-1 flex-wrap">
-                        {kol.productNames.map((name) => (
-                          <Tag key={name} color="default" fill="outline" style={{ fontSize: 10 }}>
-                            {name}
-                          </Tag>
-                        ))}
-                      </div>
-                    )}
-                  </List.Item>
-                ))}
-              </List>
-            </Collapse.Panel>
-          ))}
-        </Collapse>
-      )}
+                  }
+                >
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-medium">@{kol.ig_handle}</span>
+                  </div>
+                  {kol.productNames && kol.productNames.length > 0 && (
+                    <div className="flex gap-1 mt-1 flex-wrap">
+                      {kol.productNames.map((name) => (
+                        <Tag key={name} color="default" fill="outline" style={{ fontSize: 10 }}>
+                          {name}
+                        </Tag>
+                      ))}
+                    </div>
+                  )}
+                </List.Item>
+              ))}
+            </List>
+          </Collapse.Panel>
+        ))}
+      </Collapse>
+    );
+  };
+
+  return (
+    <div>
+      <div className="px-4 pt-4">
+        <h2 className="text-xl font-bold mb-2">公關品管理</h2>
+      </div>
+
+      <Tabs activeKey={activeTab} onChange={setActiveTab}>
+        <Tabs.Tab title={`直接寄出 (${directKols.length})`} key="direct" />
+        <Tabs.Tab title={`銷售3件後 (${conditionalKols.length})`} key="conditional" />
+      </Tabs>
+
+      <div className="p-4">
+        {loading ? (
+          <Skeleton.Paragraph lineCount={5} animated />
+        ) : activeTab === 'direct' ? (
+          renderKolList(directGroups, true)
+        ) : (
+          renderKolList(conditionalGroups, true)
+        )}
+      </div>
     </div>
   );
 }
