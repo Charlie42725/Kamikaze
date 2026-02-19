@@ -61,7 +61,6 @@ export default function AdminDashboard() {
   }, [supabase]);
 
   const activeKols = kols.filter((k) => k.status === 'active');
-  const endedKols = kols.filter((k) => k.status === 'ended');
 
   // Build pending settlement count per KOL
   const pendingByKolId = useMemo(() => {
@@ -144,16 +143,6 @@ export default function AdminDashboard() {
           )}
         </Card>
         <Card style={{ textAlign: 'center' }}>
-          {kolsLoading ? (
-            <Skeleton.Paragraph lineCount={1} animated />
-          ) : (
-            <>
-              <div className="text-2xl font-bold text-gray-500">{endedKols.length}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">已結束</div>
-            </>
-          )}
-        </Card>
-        <Card style={{ textAlign: 'center' }}>
           {reminders.loading ? (
             <Skeleton.Paragraph lineCount={1} animated />
           ) : (
@@ -184,7 +173,7 @@ export default function AdminDashboard() {
       ) : staffGroups.length === 0 ? (
         <div className="text-sm text-gray-400">尚無資料</div>
       ) : (
-        <Collapse defaultActiveKey={staffGroups.map(([key]) => key)}>
+        <Collapse>
           {staffGroups.map(([key, group]) => (
             <Collapse.Panel
               key={key}
