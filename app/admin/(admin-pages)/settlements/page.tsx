@@ -73,7 +73,7 @@ export default function SettlementsPage() {
           pendingKols.length === 0 ? (
             <Empty description="沒有待結算項目" />
           ) : (
-            <Collapse defaultActiveKey={groupedPending.map(([key]) => key)}>
+            <Collapse>
               {groupedPending.map(([key, { staffName, items }]) => (
                 <Collapse.Panel key={key} title={`${staffName}（${items.length}）`}>
                   {items.map((kol) => (
@@ -98,7 +98,7 @@ export default function SettlementsPage() {
         ) : settlements.length === 0 ? (
           <Empty description="沒有已結算項目" />
         ) : (
-          <Collapse defaultActiveKey={groupedSettled.map(([key]) => key)}>
+          <Collapse>
             {groupedSettled.map(([key, { staffName, items }]) => (
               <Collapse.Panel key={key} title={`${staffName}（${items.length}）`}>
                 {items.map((settlement) => (
