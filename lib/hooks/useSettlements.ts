@@ -18,6 +18,7 @@ type SettlementWithKol = Settlement & {
 export interface PendingSettlementKol {
   id: string;
   ig_handle: string;
+  group_buy_start_date: string | null;
   group_buy_end_date: string;
   staff_id: string | null;
   staff?: { display_name: string } | null;
@@ -45,20 +46,28 @@ export function useSettlements(options: UseSettlementsOptions = {}) {
       setLoading(true);
 
       if (settled === false) {
-        // "待結算" — query pending_settlements view (KOLs needing settlement)
+        // "待結算" — query kols that are ended and not yet settled
         let query = supabase
-          .from('pending_settlements')
-          .select('*')
+          .from('kols')
+          .select('id, ig_handle, group_buy_start_date, group_buy_end_date, staff_id')
+          .eq('status', 'ended')
+          .not('group_buy_end_date', 'is', null)
           .order('group_buy_end_date', { ascending: true });
 
         if (staffOnly && userId) {
           query = query.eq('staff_id', userId);
         }
 
-        const { data, error } = await query;
-        if (error) console.error('fetchPendingSettlements error:', error);
+        // Also fetch kol_ids that already have settled settlements
+        const [kolsRes, settledRes] = await Promise.all([
+          query,
+          supabase.from('settlements').select('kol_id').eq('is_settled', true),
+        ]);
+        if (kolsRes.error) console.error('fetchPendingSettlements error:', kolsRes.error);
 
-        const results = (data ?? []) as unknown as PendingSettlementKol[];
+        const settledKolIds = new Set((settledRes.data ?? []).map((s: { kol_id: string }) => s.kol_id));
+        const results = ((kolsRes.data ?? []) as unknown as PendingSettlementKol[])
+          .filter((k) => !settledKolIds.has(k.id));
 
         // Fetch staff names for admin view
         if (!staffOnly && results.length > 0) {
