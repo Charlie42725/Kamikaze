@@ -2,11 +2,14 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: '/',
     name: '神風特攻隊 - KOL 管理',
     short_name: '神風特攻隊',
     description: 'KOL 網紅管理系統',
     start_url: '/',
+    scope: '/',
     display: 'standalone',
+    orientation: 'portrait',
     background_color: '#ffffff',
     theme_color: '#1677ff',
     icons: [
@@ -24,6 +27,7 @@ export default function manifest(): MetadataRoute.Manifest {
         src: '/icons/icon-512x512.png',
         sizes: '512x512',
         type: 'image/png',
+        purpose: 'any maskable',
       },
     ],
   };
