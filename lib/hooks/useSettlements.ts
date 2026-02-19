@@ -5,7 +5,13 @@ import { useSupabase } from '@/components/providers/SupabaseProvider';
 import { useAuth } from '@/components/providers/AuthProvider';
 import type { Settlement, SettlementInsert, SettlementUpdate } from '@/lib/types/database';
 
-type SettlementWithKol = Settlement & { kol?: { ig_handle: string; staff_id: string | null } };
+type SettlementWithKol = Settlement & {
+  kol?: {
+    ig_handle: string;
+    staff_id: string | null;
+    staff?: { display_name: string } | null;
+  };
+};
 
 interface UseSettlementsOptions {
   settled?: boolean;
@@ -24,7 +30,7 @@ export function useSettlements(options: UseSettlementsOptions = {}) {
       setLoading(true);
       let query = supabase
         .from('settlements')
-        .select('*, kol:kols(ig_handle, staff_id)')
+        .select('*, kol:kols(ig_handle, staff_id, staff:profiles(display_name))')
         .order('created_at', { ascending: false });
 
       if (settled !== undefined) {
@@ -85,7 +91,7 @@ export function useSettlements(options: UseSettlementsOptions = {}) {
   const getSettlement = async (id: string) => {
     const { data, error } = await supabase
       .from('settlements')
-      .select('*, kol:kols(ig_handle, staff_id)')
+      .select('*, kol:kols(ig_handle, staff_id, staff:profiles(display_name))')
       .eq('id', id)
       .single();
     if (error) throw error;

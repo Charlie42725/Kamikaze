@@ -1,13 +1,32 @@
 'use client';
 
-import { useState } from 'react';
-import { Tabs, SpinLoading, Empty } from 'antd-mobile';
+import { useMemo, useState } from 'react';
+import { Tabs, SpinLoading, Empty, Collapse } from 'antd-mobile';
 import { SettlementCard } from '@/components/settlement/SettlementCard';
 import { useSettlements } from '@/lib/hooks/useSettlements';
 
 export default function SettlementsPage() {
   const [activeTab, setActiveTab] = useState<'pending' | 'settled'>('pending');
   const { settlements, loading } = useSettlements({ settled: activeTab === 'settled' });
+
+  // Group settlements by staff display_name
+  const groupedByStaff = useMemo(() => {
+    const groups: Record<string, { staffName: string; items: typeof settlements }> = {};
+
+    for (const s of settlements) {
+      const staffName = s.kol?.staff?.display_name || '未指派';
+      const key = s.kol?.staff_id || '_unassigned';
+      if (!groups[key]) {
+        groups[key] = { staffName, items: [] };
+      }
+      groups[key].items.push(s);
+    }
+
+    // Sort groups by staff name
+    return Object.entries(groups).sort((a, b) =>
+      a[1].staffName.localeCompare(b[1].staffName)
+    );
+  }, [settlements]);
 
   return (
     <div>
@@ -28,9 +47,18 @@ export default function SettlementsPage() {
         ) : settlements.length === 0 ? (
           <Empty description={activeTab === 'pending' ? '沒有待結算項目' : '沒有已結算項目'} />
         ) : (
-          settlements.map((settlement) => (
-            <SettlementCard key={settlement.id} settlement={settlement} />
-          ))
+          <Collapse defaultActiveKey={groupedByStaff.map(([key]) => key)}>
+            {groupedByStaff.map(([key, { staffName, items }]) => (
+              <Collapse.Panel
+                key={key}
+                title={`${staffName}（${items.length}）`}
+              >
+                {items.map((settlement) => (
+                  <SettlementCard key={settlement.id} settlement={settlement} />
+                ))}
+              </Collapse.Panel>
+            ))}
+          </Collapse>
         )}
       </div>
     </div>
