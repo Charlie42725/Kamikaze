@@ -92,17 +92,17 @@ export default function StaffPrProductsPage() {
               description={
                 <div className="flex flex-col gap-2 mt-2">
                   <div className="flex items-center justify-between">
+                    <span className="text-sm">已寄出</span>
+                    <Tag color={kol.pr_shipped ? 'success' : 'default'}>
+                      {kol.pr_shipped ? '已寄出' : '未寄出'}
+                    </Tag>
+                  </div>
+                  <div className="flex items-center justify-between">
                     <span className="text-sm">已提醒寄出</span>
                     <Switch
                       checked={kol.pr_ship_reminded}
                       onChange={(checked) => handleToggle(kol.id, 'pr_ship_reminded', checked)}
                     />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">已寄出</span>
-                    <Tag color={kol.pr_shipped ? 'success' : 'default'}>
-                      {kol.pr_shipped ? '已寄出' : '未寄出'}
-                    </Tag>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">已收到</span>
