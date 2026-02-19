@@ -8,6 +8,7 @@ import type { Kol, Profile } from '@/lib/types/database';
 
 interface KolWithStaff extends Kol {
   staffName?: string;
+  productNames?: string[];
 }
 
 export default function AdminPrProductsPage() {
@@ -20,7 +21,7 @@ export default function AdminPrProductsPage() {
       setLoading(true);
       const { data, error } = await supabase
         .from('kols')
-        .select('*')
+        .select('*, kol_products(product:products(name))')
         .eq('has_pr_products', true)
         .eq('pr_products_received', false)
         .in('status', ['potential', 'active'])
@@ -48,10 +49,17 @@ export default function AdminPrProductsPage() {
       }
 
       setKols(
-        kolList.map((k) => ({
-          ...k,
-          staffName: k.staff_id ? staffMap[k.staff_id] : undefined,
-        }))
+        kolList.map((k) => {
+          const raw = k as unknown as Kol & { kol_products?: { product: { name: string } | null }[] };
+          const productNames = (raw.kol_products ?? [])
+            .map((kp) => kp.product?.name)
+            .filter(Boolean) as string[];
+          return {
+            ...k,
+            staffName: k.staff_id ? staffMap[k.staff_id] : undefined,
+            productNames,
+          };
+        })
       );
     } catch (e) {
       console.error('fetchPrKols error:', e);
@@ -159,12 +167,21 @@ export default function AdminPrProductsPage() {
                       </div>
                     }
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium">@{kol.ig_handle}</span>
                       <Tag color="primary" fill="outline" style={{ fontSize: 10 }}>
                         {shipModeLabel(kol.pr_ship_mode)}
                       </Tag>
                     </div>
+                    {kol.productNames && kol.productNames.length > 0 && (
+                      <div className="flex gap-1 mt-1 flex-wrap">
+                        {kol.productNames.map((name) => (
+                          <Tag key={name} color="default" fill="outline" style={{ fontSize: 10 }}>
+                            {name}
+                          </Tag>
+                        ))}
+                      </div>
+                    )}
                   </List.Item>
                 ))}
               </List>

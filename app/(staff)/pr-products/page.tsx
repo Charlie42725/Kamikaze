@@ -7,10 +7,14 @@ import { useSupabase } from '@/components/providers/SupabaseProvider';
 import { useAuth } from '@/components/providers/AuthProvider';
 import type { Kol } from '@/lib/types/database';
 
+interface KolWithProducts extends Kol {
+  productNames?: string[];
+}
+
 export default function StaffPrProductsPage() {
   const supabase = useSupabase();
   const { profile, loading: authLoading } = useAuth();
-  const [kols, setKols] = useState<Kol[]>([]);
+  const [kols, setKols] = useState<KolWithProducts[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchPrKols = useCallback(async () => {
@@ -19,14 +23,23 @@ export default function StaffPrProductsPage() {
       setLoading(true);
       const { data, error } = await supabase
         .from('kols')
-        .select('*')
+        .select('*, kol_products(product:products(name))')
         .eq('staff_id', profile.id)
         .eq('has_pr_products', true)
         .in('status', ['potential', 'active'])
         .order('created_at', { ascending: false });
 
       if (error) console.error('fetchPrKols error:', error);
-      setKols((data as unknown as Kol[]) ?? []);
+      const kolList = (data as unknown as Kol[]) ?? [];
+      setKols(
+        kolList.map((k) => {
+          const raw = k as unknown as Kol & { kol_products?: { product: { name: string } | null }[] };
+          const productNames = (raw.kol_products ?? [])
+            .map((kp) => kp.product?.name)
+            .filter(Boolean) as string[];
+          return { ...k, productNames };
+        })
+      );
     } catch (e) {
       console.error('fetchPrKols error:', e);
     } finally {
@@ -114,12 +127,21 @@ export default function StaffPrProductsPage() {
                 </div>
               }
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-medium">@{kol.ig_handle}</span>
                 <Tag color="primary" fill="outline" style={{ fontSize: 10 }}>
                   {shipModeLabel(kol.pr_ship_mode)}
                 </Tag>
               </div>
+              {kol.productNames && kol.productNames.length > 0 && (
+                <div className="flex gap-1 mt-1 flex-wrap">
+                  {kol.productNames.map((name) => (
+                    <Tag key={name} color="default" fill="outline" style={{ fontSize: 10 }}>
+                      {name}
+                    </Tag>
+                  ))}
+                </div>
+              )}
             </List.Item>
           ))}
         </List>
