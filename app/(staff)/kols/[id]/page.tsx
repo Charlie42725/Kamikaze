@@ -94,7 +94,7 @@ export default function KolDetailPage() {
         <Card style={{ marginBottom: 16 }}>
           <div className="flex items-center gap-2 mb-3">
             <span className="font-bold text-lg">@{kol.ig_handle}</span>
-            <KolStatusBadge status={kol.status} />
+            <KolStatusBadge status={kol.status} groupBuyStartDate={kol.group_buy_start_date} />
           </div>
         </Card>
 

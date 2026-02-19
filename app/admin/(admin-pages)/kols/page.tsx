@@ -5,12 +5,15 @@ import { Tabs, Skeleton, Empty, SearchBar, Collapse, Tag } from 'antd-mobile';
 import { KolCard } from '@/components/kol/KolCard';
 import { useKols } from '@/lib/hooks/useKols';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
-import type { KolStatus, Profile } from '@/lib/types/database';
+import { getKolDisplayStatus } from '@/lib/constants';
+import type { Profile } from '@/lib/types/database';
+
+type TabKey = 'all' | 'active' | 'upcoming' | 'potential' | 'ended';
 
 export default function AdminKolsPage() {
   const supabase = useSupabase();
-  const [activeTab, setActiveTab] = useState<KolStatus | 'all'>('all');
-  const { kols, loading } = useKols(activeTab);
+  const [activeTab, setActiveTab] = useState<TabKey>('all');
+  const { kols, loading } = useKols();
   const [search, setSearch] = useState('');
   const [staffMap, setStaffMap] = useState<Record<string, string>>({});
   const [staffLoading, setStaffLoading] = useState(true);
@@ -33,12 +36,19 @@ export default function AdminKolsPage() {
     fetchStaff();
   }, [supabase]);
 
-  const filteredKols = search
-    ? kols.filter((k) => k.ig_handle.toLowerCase().includes(search.toLowerCase()))
-    : kols;
+  const filteredKols = useMemo(() => {
+    let list = kols;
+    if (activeTab !== 'all') {
+      list = list.filter((k) => getKolDisplayStatus(k) === activeTab);
+    }
+    if (search) {
+      list = list.filter((k) => k.ig_handle.toLowerCase().includes(search.toLowerCase()));
+    }
+    return list;
+  }, [kols, activeTab, search]);
 
   const staffGroups = useMemo(() => {
-    const groups: Record<string, typeof filteredKols> = {};
+    const groups: Record<string, typeof kols> = {};
     for (const kol of filteredKols) {
       const key = kol.staff_id || '_unassigned';
       if (!groups[key]) groups[key] = [];
@@ -51,7 +61,7 @@ export default function AdminKolsPage() {
         items,
       }))
       .sort((a, b) => a.staffName.localeCompare(b.staffName));
-  }, [filteredKols, staffMap]);
+  }, [filteredKols, staffMap, kols]);
 
   const isLoading = loading || staffLoading;
 
@@ -67,9 +77,10 @@ export default function AdminKolsPage() {
         />
       </div>
 
-      <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key as KolStatus | 'all')}>
+      <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key as TabKey)}>
         <Tabs.Tab title="全部" key="all" />
         <Tabs.Tab title="進行中" key="active" />
+        <Tabs.Tab title="待開團" key="upcoming" />
         <Tabs.Tab title="潛在" key="potential" />
         <Tabs.Tab title="已結束" key="ended" />
       </Tabs>

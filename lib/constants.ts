@@ -31,18 +31,31 @@ export const ROUTES = {
   },
 } as const;
 
-// KOL status labels
+// KOL display status (includes "待開團" derived from active + future start date)
+export type KolDisplayStatus = 'potential' | 'upcoming' | 'active' | 'ended';
+
 export const KOL_STATUS_LABELS: Record<string, string> = {
   potential: '潛在',
+  upcoming: '待開團',
   active: '進行中',
   ended: '已結束',
 };
 
 export const KOL_STATUS_COLORS: Record<string, string> = {
   potential: '#faad14',
+  upcoming: '#1677ff',
   active: '#52c41a',
   ended: '#ff4d4f',
 };
+
+/** Derive display status from KOL data */
+export function getKolDisplayStatus(kol: { status: string; group_buy_start_date: string | null }): KolDisplayStatus {
+  if (kol.status === 'active' && kol.group_buy_start_date) {
+    const today = new Date().toISOString().slice(0, 10);
+    if (kol.group_buy_start_date > today) return 'upcoming';
+  }
+  return kol.status as KolDisplayStatus;
+}
 
 // Upload limits
 export const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB

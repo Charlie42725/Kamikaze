@@ -7,6 +7,7 @@ import { useKols } from '@/lib/hooks/useKols';
 import { useReminders } from '@/lib/hooks/useReminders';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
 import { ReminderList } from '@/components/reminder/ReminderList';
+import { getKolDisplayStatus } from '@/lib/constants';
 
 export default function StaffDashboard() {
   const { profile } = useAuth();
@@ -26,7 +27,8 @@ export default function StaffDashboard() {
     });
   }, [supabase, fetchKols, reminders]);
 
-  const activeKols = kols.filter((k) => k.status === 'active');
+  const activeKols = kols.filter((k) => getKolDisplayStatus(k) === 'active');
+  const upcomingKols = kols.filter((k) => getKolDisplayStatus(k) === 'upcoming');
   const potentialKols = kols.filter((k) => k.status === 'potential');
 
   const bannerMessages: string[] = [];
@@ -70,6 +72,16 @@ export default function StaffDashboard() {
             <>
               <div className="text-2xl font-bold text-green-500">{activeKols.length}</div>
               <div className="text-xs text-gray-500 dark:text-gray-400">進行中</div>
+            </>
+          )}
+        </Card>
+        <Card style={{ textAlign: 'center' }}>
+          {kolsLoading ? (
+            <Skeleton.Paragraph lineCount={1} animated />
+          ) : (
+            <>
+              <div className="text-2xl font-bold text-blue-500">{upcomingKols.length}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">待開團</div>
             </>
           )}
         </Card>

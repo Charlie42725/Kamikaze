@@ -27,7 +27,7 @@ export function KolCard({ kol, basePath }: KolCardProps) {
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             <span className="font-semibold text-base">@{kol.ig_handle}</span>
-            <KolStatusBadge status={kol.status} />
+            <KolStatusBadge status={kol.status} groupBuyStartDate={kol.group_buy_start_date} />
           </div>
           {kol.group_buy_end_date && (
             <div className="text-xs text-gray-500 dark:text-gray-400">

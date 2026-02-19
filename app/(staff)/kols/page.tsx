@@ -1,18 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Tabs, Empty, Skeleton } from 'antd-mobile';
 import { AddOutline } from 'antd-mobile-icons';
 import { useRouter } from 'next/navigation';
 import { KolCard } from '@/components/kol/KolCard';
 import { useKols } from '@/lib/hooks/useKols';
+import { getKolDisplayStatus } from '@/lib/constants';
 import { ROUTES } from '@/lib/constants';
-import type { KolStatus } from '@/lib/types/database';
+import type { Kol } from '@/lib/types/database';
+
+type TabKey = 'all' | 'active' | 'upcoming' | 'potential' | 'ended';
 
 export default function KolsPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<KolStatus | 'all'>('all');
-  const { kols, loading } = useKols(activeTab);
+  const [activeTab, setActiveTab] = useState<TabKey>('all');
+  const { kols, loading } = useKols();
+
+  const filteredKols = useMemo(() => {
+    if (activeTab === 'all') return kols;
+    return kols.filter((k) => getKolDisplayStatus(k) === activeTab);
+  }, [kols, activeTab]);
 
   return (
     <div>
@@ -22,9 +30,10 @@ export default function KolsPage() {
         </div>
       </div>
 
-      <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key as KolStatus | 'all')}>
+      <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key as TabKey)}>
         <Tabs.Tab title="全部" key="all" />
         <Tabs.Tab title="進行中" key="active" />
+        <Tabs.Tab title="待開團" key="upcoming" />
         <Tabs.Tab title="潛在" key="potential" />
         <Tabs.Tab title="已結束" key="ended" />
       </Tabs>
@@ -35,10 +44,10 @@ export default function KolsPage() {
             <Skeleton.Paragraph lineCount={3} animated />
             <Skeleton.Paragraph lineCount={3} animated />
           </div>
-        ) : kols.length === 0 ? (
+        ) : filteredKols.length === 0 ? (
           <Empty description="尚無網紅資料" />
         ) : (
-          kols.map((kol) => <KolCard key={kol.id} kol={kol} />)
+          filteredKols.map((kol) => <KolCard key={kol.id} kol={kol} />)
         )}
       </div>
 

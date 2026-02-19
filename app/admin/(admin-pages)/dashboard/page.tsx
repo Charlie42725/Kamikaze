@@ -8,13 +8,14 @@ import { useSettlements } from '@/lib/hooks/useSettlements';
 import { useReminders } from '@/lib/hooks/useReminders';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
 import { ReminderList } from '@/components/reminder/ReminderList';
-import { ROUTES } from '@/lib/constants';
+import { ROUTES, getKolDisplayStatus } from '@/lib/constants';
 import type { Profile } from '@/lib/types/database';
 
 interface StaffGroup {
   staffName: string;
   total: number;
   active: number;
+  upcoming: number;
   ended: number;
   potential: number;
   pendingSettlements: number;
@@ -60,7 +61,8 @@ export default function AdminDashboard() {
     fetchStaff();
   }, [supabase]);
 
-  const activeKols = kols.filter((k) => k.status === 'active');
+  const activeKols = kols.filter((k) => getKolDisplayStatus(k) === 'active');
+  const upcomingKols = kols.filter((k) => getKolDisplayStatus(k) === 'upcoming');
 
   // Build pending settlement KOL IDs set
   const pendingKolIds = useMemo(() => {
@@ -76,13 +78,15 @@ export default function AdminDashboard() {
       const staffName = k.staff_id ? (staffMap[k.staff_id] || '未知') : '未指派';
 
       if (!groups[key]) {
-        groups[key] = { staffName, total: 0, active: 0, ended: 0, potential: 0, pendingSettlements: 0 };
+        groups[key] = { staffName, total: 0, active: 0, upcoming: 0, ended: 0, potential: 0, pendingSettlements: 0 };
       }
 
       groups[key].total++;
-      if (k.status === 'active') groups[key].active++;
-      else if (k.status === 'ended') groups[key].ended++;
-      else if (k.status === 'potential') groups[key].potential++;
+      const displayStatus = getKolDisplayStatus(k);
+      if (displayStatus === 'active') groups[key].active++;
+      else if (displayStatus === 'upcoming') groups[key].upcoming++;
+      else if (displayStatus === 'ended') groups[key].ended++;
+      else if (displayStatus === 'potential') groups[key].potential++;
 
       if (pendingKolIds.has(k.id)) {
         groups[key].pendingSettlements++;
@@ -138,6 +142,16 @@ export default function AdminDashboard() {
             </>
           )}
         </Card>
+        <Card style={{ textAlign: 'center' }}>
+          {kolsLoading ? (
+            <Skeleton.Paragraph lineCount={1} animated />
+          ) : (
+            <>
+              <div className="text-2xl font-bold text-blue-400">{upcomingKols.length}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">待開團</div>
+            </>
+          )}
+        </Card>
         <Card
           style={{ textAlign: 'center', cursor: 'pointer' }}
           onClick={() => router.push(ROUTES.ADMIN.SETTLEMENTS)}
@@ -190,10 +204,14 @@ export default function AdminDashboard() {
                 </div>
               }
             >
-              <div className="grid grid-cols-3 gap-2 py-2">
+              <div className="grid grid-cols-4 gap-2 py-2">
                 <div className="text-center">
                   <div className="text-lg font-bold text-green-500">{group.active}</div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">進行中</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-blue-400">{group.upcoming}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">待開團</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-bold text-yellow-500">{group.potential}</div>
