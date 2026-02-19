@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, NoticeBar, Skeleton } from 'antd-mobile';
+import { Card, NoticeBar, Skeleton, Tag } from 'antd-mobile';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useKols } from '@/lib/hooks/useKols';
 import { useSettlements } from '@/lib/hooks/useSettlements';
@@ -10,13 +10,14 @@ import { useReminders } from '@/lib/hooks/useReminders';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
 import { ReminderList } from '@/components/reminder/ReminderList';
 import { ROUTES } from '@/lib/constants';
+import dayjs from 'dayjs';
 
 export default function StaffDashboard() {
   const { profile } = useAuth();
   const router = useRouter();
   const supabase = useSupabase();
   const { kols, loading: kolsLoading, fetchKols } = useKols();
-  const { settlements: pendingSettlements, loading: settlementsLoading } = useSettlements({ settled: false, staffOnly: true });
+  const { pendingKols, loading: settlementsLoading } = useSettlements({ settled: false, staffOnly: true });
   const reminders = useReminders();
   const autoEndedRef = useRef(false);
 
@@ -96,12 +97,32 @@ export default function StaffDashboard() {
             <Skeleton.Paragraph lineCount={1} animated />
           ) : (
             <>
-              <div className="text-2xl font-bold text-orange-500">{pendingSettlements.length}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">我的結算</div>
+              <div className="text-2xl font-bold text-orange-500">{pendingKols.length}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">待結算</div>
             </>
           )}
         </Card>
       </div>
+
+      {/* 待結算列表 - 從遠至近排序 */}
+      {pendingKols.length > 0 && (
+        <>
+          <h3 className="text-base font-semibold mb-3">待結算</h3>
+          <div className="mb-6">
+            {pendingKols.map((kol) => (
+              <Card key={kol.id} style={{ marginBottom: 8 }}>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">@{kol.ig_handle}</span>
+                  <Tag color="warning" fill="outline" style={{ fontSize: 12 }}>待結算</Tag>
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  開團結束：{dayjs(kol.group_buy_end_date).format('YYYY/MM/DD')}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </>
+      )}
 
       <h3 className="text-base font-semibold mb-3">待處理提醒</h3>
       <ReminderList data={reminders} />

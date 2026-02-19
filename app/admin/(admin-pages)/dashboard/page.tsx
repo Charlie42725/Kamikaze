@@ -9,7 +9,7 @@ import { useReminders } from '@/lib/hooks/useReminders';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
 import { ReminderList } from '@/components/reminder/ReminderList';
 import { ROUTES } from '@/lib/constants';
-import type { Profile, Kol } from '@/lib/types/database';
+import type { Profile } from '@/lib/types/database';
 
 interface StaffGroup {
   staffName: string;
@@ -24,7 +24,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const supabase = useSupabase();
   const { kols, loading: kolsLoading, fetchKols } = useKols();
-  const { settlements: pendingSettlements, loading: settlementsLoading } = useSettlements({ settled: false });
+  const { pendingKols, loading: settlementsLoading } = useSettlements({ settled: false });
   const reminders = useReminders();
   const autoEndedRef = useRef(false);
   const [staffMap, setStaffMap] = useState<Record<string, string>>({});
@@ -62,14 +62,10 @@ export default function AdminDashboard() {
 
   const activeKols = kols.filter((k) => k.status === 'active');
 
-  // Build pending settlement count per KOL
-  const pendingByKolId = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const s of pendingSettlements) {
-      map[s.kol_id] = (map[s.kol_id] || 0) + 1;
-    }
-    return map;
-  }, [pendingSettlements]);
+  // Build pending settlement KOL IDs set
+  const pendingKolIds = useMemo(() => {
+    return new Set(pendingKols.map((k) => k.id));
+  }, [pendingKols]);
 
   // Group KOLs by staff
   const staffGroups = useMemo(() => {
@@ -88,15 +84,15 @@ export default function AdminDashboard() {
       else if (k.status === 'ended') groups[key].ended++;
       else if (k.status === 'potential') groups[key].potential++;
 
-      if (pendingByKolId[k.id]) {
-        groups[key].pendingSettlements += pendingByKolId[k.id];
+      if (pendingKolIds.has(k.id)) {
+        groups[key].pendingSettlements++;
       }
     }
 
     return Object.entries(groups).sort((a, b) =>
       a[1].staffName.localeCompare(b[1].staffName)
     );
-  }, [kols, staffMap, pendingByKolId]);
+  }, [kols, staffMap, pendingKolIds]);
 
   const bannerMessages: string[] = [];
   if (reminders.upcomingEndings.length > 0) {
@@ -142,12 +138,15 @@ export default function AdminDashboard() {
             </>
           )}
         </Card>
-        <Card style={{ textAlign: 'center' }}>
-          {reminders.loading ? (
+        <Card
+          style={{ textAlign: 'center', cursor: 'pointer' }}
+          onClick={() => router.push(ROUTES.ADMIN.SETTLEMENTS)}
+        >
+          {settlementsLoading ? (
             <Skeleton.Paragraph lineCount={1} animated />
           ) : (
             <>
-              <div className="text-2xl font-bold text-orange-500">{reminders.pendingSettlements.length}</div>
+              <div className="text-2xl font-bold text-orange-500">{pendingKols.length}</div>
               <div className="text-xs text-gray-500 dark:text-gray-400">待結算</div>
             </>
           )}
