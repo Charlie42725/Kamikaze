@@ -80,7 +80,7 @@ export function KolSopForm({
         revenue_share_start_unit: values.revenue_share_start_unit ?? null,
         has_exclusive_store: values.has_exclusive_store || false,
         notes: values.notes || null,
-        staff_id: user?.id || null,
+        staff_id: initialData ? initialData.staff_id : (user?.id || null),
       };
 
       await onSubmit(data, selectedProductIds);
