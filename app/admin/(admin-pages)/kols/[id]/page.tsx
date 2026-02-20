@@ -9,6 +9,7 @@ import {
   Dialog,
   SpinLoading,
   Toast,
+  Space,
 } from 'antd-mobile';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { KolStatusBadge } from '@/components/kol/KolStatusBadge';
@@ -190,30 +191,39 @@ export default function AdminKolDetailPage() {
         )}
 
         <div style={{ padding: '24px 0' }}>
-          <Button
-            block
-            color="danger"
-            fill="outline"
-            onClick={() => {
-              Dialog.confirm({
-                content: `確定要刪除 @${kol.ig_handle} 嗎？此操作無法復原。`,
-                confirmText: '刪除',
-                cancelText: '取消',
-                onConfirm: async () => {
-                  try {
-                    const { error } = await supabase.from('kols').delete().eq('id', kol.id);
-                    if (error) throw error;
-                    Toast.show({ content: '已刪除', icon: 'success' });
-                    router.replace(ROUTES.ADMIN.KOLS);
-                  } catch {
-                    Toast.show({ content: '刪除失敗', icon: 'fail' });
-                  }
-                },
-              });
-            }}
-          >
-            刪除此網紅
-          </Button>
+          <Space direction="vertical" style={{ width: '100%' }} block>
+            <Button
+              block
+              color="primary"
+              onClick={() => router.push(ROUTES.ADMIN.KOL_EDIT(kol.id))}
+            >
+              編輯網紅
+            </Button>
+            <Button
+              block
+              color="danger"
+              fill="outline"
+              onClick={() => {
+                Dialog.confirm({
+                  content: `確定要刪除 @${kol.ig_handle} 嗎？此操作無法復原。`,
+                  confirmText: '刪除',
+                  cancelText: '取消',
+                  onConfirm: async () => {
+                    try {
+                      const { error } = await supabase.from('kols').delete().eq('id', kol.id);
+                      if (error) throw error;
+                      Toast.show({ content: '已刪除', icon: 'success' });
+                      router.replace(ROUTES.ADMIN.KOLS);
+                    } catch {
+                      Toast.show({ content: '刪除失敗', icon: 'fail' });
+                    }
+                  },
+                });
+              }}
+            >
+              刪除此網紅
+            </Button>
+          </Space>
         </div>
       </div>
     </div>

@@ -22,6 +22,7 @@ export const ROUTES = {
     DASHBOARD: '/admin/dashboard',
     KOLS: '/admin/kols',
     KOL_DETAIL: (id: string) => `/admin/kols/${id}`,
+    KOL_EDIT: (id: string) => `/admin/kols/${id}/edit`,
     PRODUCTS: '/admin/products',
     PRODUCT_ADD: '/admin/products/add',
     PRODUCT_EDIT: (id: string) => `/admin/products/${id}/edit`,
