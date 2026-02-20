@@ -56,6 +56,7 @@ export default function StaffPrProductsPage() {
   }, [authLoading, profile?.id, fetchPrKols]);
 
   const handleToggle = async (kolId: string, field: 'pr_ship_reminded' | 'pr_products_received', value: boolean) => {
+    setKols(prev => prev.map(k => k.id === kolId ? { ...k, [field]: value } : k));
     try {
       const { error } = await supabase
         .from('kols')
@@ -64,8 +65,8 @@ export default function StaffPrProductsPage() {
 
       if (error) throw error;
       Toast.show({ content: '更新成功', icon: 'success' });
-      await fetchPrKols();
     } catch {
+      setKols(prev => prev.map(k => k.id === kolId ? { ...k, [field]: !value } : k));
       Toast.show({ content: '更新失敗', icon: 'fail' });
     }
   };

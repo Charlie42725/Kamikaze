@@ -89,6 +89,7 @@ export default function AdminPrProductsPage() {
   }, [fetchPrKols]);
 
   const handleToggleShipped = async (kolId: string, value: boolean) => {
+    setKols(prev => prev.map(k => k.id === kolId ? { ...k, pr_shipped: value } : k));
     try {
       const { error } = await supabase
         .from('kols')
@@ -97,8 +98,8 @@ export default function AdminPrProductsPage() {
 
       if (error) throw error;
       Toast.show({ content: '更新成功', icon: 'success' });
-      await fetchPrKols();
     } catch {
+      setKols(prev => prev.map(k => k.id === kolId ? { ...k, pr_shipped: !value } : k));
       Toast.show({ content: '更新失敗', icon: 'fail' });
     }
   };
