@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { List, Switch, Tag, Empty, Skeleton, Toast, Tabs } from 'antd-mobile';
+import { List, Switch, Tag, Empty, Skeleton, Toast, Tabs, Dialog } from 'antd-mobile';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
 import { useAuth } from '@/components/providers/AuthProvider';
 import type { Kol } from '@/lib/types/database';
@@ -56,6 +56,15 @@ export default function StaffPrProductsPage() {
   }, [authLoading, profile?.id, fetchPrKols]);
 
   const handleToggle = async (kolId: string, field: 'pr_ship_reminded' | 'pr_products_received', value: boolean) => {
+    if (field === 'pr_products_received' && value) {
+      const confirmed = await Dialog.confirm({
+        title: '確認已收到公關品',
+        content: '確定網紅已收到公關品嗎？確認後將標記為完成。',
+        confirmText: '確認',
+        cancelText: '取消',
+      });
+      if (!confirmed) return;
+    }
     setKols(prev => prev.map(k => k.id === kolId ? { ...k, [field]: value } : k));
     try {
       const { error } = await supabase
