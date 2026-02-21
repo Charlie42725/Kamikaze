@@ -64,6 +64,10 @@ export default function AdminDashboard() {
   const activeKols = kols.filter((k) => getKolDisplayStatus(k) === 'active');
   const upcomingKols = kols.filter((k) => getKolDisplayStatus(k) === 'upcoming');
 
+  // PR 公關品：待寄 vs 待收
+  const pendingShipPr = reminders.pendingPr.filter((k) => !k.pr_shipped);
+  const pendingReceivePr = reminders.pendingPr.filter((k) => k.pr_shipped);
+
   // Build pending settlement KOL IDs set
   const pendingKolIds = useMemo(() => {
     return new Set(pendingKols.map((k) => k.id));
@@ -138,7 +142,7 @@ export default function AdminDashboard() {
           ) : (
             <>
               <div className="text-2xl font-bold text-green-500">{activeKols.length}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">進行中</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">開團中</div>
             </>
           )}
         </Card>
@@ -173,8 +177,21 @@ export default function AdminDashboard() {
             <Skeleton.Paragraph lineCount={1} animated />
           ) : (
             <>
-              <div className="text-2xl font-bold text-purple-500">{reminders.pendingPr.length}</div>
+              <div className="text-2xl font-bold text-purple-500">{pendingShipPr.length}</div>
               <div className="text-xs text-gray-500 dark:text-gray-400">待寄公關品</div>
+            </>
+          )}
+        </Card>
+        <Card
+          style={{ textAlign: 'center', cursor: 'pointer' }}
+          onClick={() => router.push(ROUTES.ADMIN.PR_PRODUCTS)}
+        >
+          {reminders.loading ? (
+            <Skeleton.Paragraph lineCount={1} animated />
+          ) : (
+            <>
+              <div className="text-2xl font-bold text-teal-500">{pendingReceivePr.length}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">待收公關品</div>
             </>
           )}
         </Card>
@@ -207,7 +224,7 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-4 gap-2 py-2">
                 <div className="text-center">
                   <div className="text-lg font-bold text-green-500">{group.active}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">進行中</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">開團中</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-bold text-blue-400">{group.upcoming}</div>
