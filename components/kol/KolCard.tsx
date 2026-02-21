@@ -30,7 +30,7 @@ export const KolCard = memo(function KolCard({ kol, basePath }: KolCardProps) {
             <span className="font-semibold text-base">@{kol.ig_handle}</span>
             <KolStatusBadge status={kol.status} groupBuyStartDate={kol.group_buy_start_date} />
             {kol.productNames && kol.productNames.map((name) => (
-              <Tag key={name} color="default" fill="outline" style={{ fontSize: 10 }}>
+              <Tag key={name} color="primary" fill="outline" style={{ fontSize: 10 }}>
                 {name}
               </Tag>
             ))}

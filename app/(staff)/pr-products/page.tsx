@@ -127,7 +127,7 @@ export default function StaffPrProductsPage() {
             {kol.productNames && kol.productNames.length > 0 && (
               <div className="flex gap-1 mt-1 flex-wrap">
                 {kol.productNames.map((name) => (
-                  <Tag key={name} color="default" fill="outline" style={{ fontSize: 10 }}>
+                  <Tag key={name} color="primary" fill="outline" style={{ fontSize: 10 }}>
                     {name}
                   </Tag>
                 ))}
@@ -183,7 +183,7 @@ export default function StaffPrProductsPage() {
                   {kol.productNames && kol.productNames.length > 0 && (
                     <div className="flex gap-1 mt-1 flex-wrap">
                       {kol.productNames.map((name) => (
-                        <Tag key={name} color="default" fill="outline" style={{ fontSize: 10 }}>
+                        <Tag key={name} color="primary" fill="outline" style={{ fontSize: 10 }}>
                           {name}
                         </Tag>
                       ))}
