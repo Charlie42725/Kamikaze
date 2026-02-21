@@ -26,9 +26,14 @@ export const KolCard = memo(function KolCard({ kol, basePath }: KolCardProps) {
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="font-semibold text-base">@{kol.ig_handle}</span>
             <KolStatusBadge status={kol.status} groupBuyStartDate={kol.group_buy_start_date} />
+            {kol.productNames && kol.productNames.map((name) => (
+              <Tag key={name} color="default" fill="outline" style={{ fontSize: 10 }}>
+                {name}
+              </Tag>
+            ))}
           </div>
           {getKolDisplayStatus(kol) === 'upcoming' && kol.group_buy_start_date ? (
             <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -39,15 +44,6 @@ export const KolCard = memo(function KolCard({ kol, basePath }: KolCardProps) {
               開團結束：{dayjs(kol.group_buy_end_date).format('YYYY/MM/DD')}
             </div>
           ) : null}
-          {kol.productNames && kol.productNames.length > 0 && (
-            <div className="flex gap-1 mt-1 flex-wrap">
-              {kol.productNames.map((name) => (
-                <Tag key={name} color="default" fill="outline" style={{ fontSize: 10 }}>
-                  {name}
-                </Tag>
-              ))}
-            </div>
-          )}
           {kol.notes && (
             <div className="text-xs text-gray-400 mt-1 truncate max-w-[200px]">
               {kol.notes}
