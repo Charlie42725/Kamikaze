@@ -1,5 +1,3 @@
-'use client';
-
 import AdminTabBar from '@/components/layout/AdminTabBar';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { Card, Tag } from 'antd-mobile';
 import { useRouter } from 'next/navigation';
 import { KolStatusBadge } from './KolStatusBadge';
@@ -12,7 +13,7 @@ interface KolCardProps {
   basePath?: string;
 }
 
-export function KolCard({ kol, basePath }: KolCardProps) {
+export const KolCard = memo(function KolCard({ kol, basePath }: KolCardProps) {
   const router = useRouter();
   const detailPath = basePath
     ? `${basePath}/${kol.id}`
@@ -57,4 +58,4 @@ export function KolCard({ kol, basePath }: KolCardProps) {
       </div>
     </Card>
   );
-}
+});

@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { Card, Image } from 'antd-mobile';
 import { useRouter } from 'next/navigation';
 import type { Product } from '@/lib/types/database';
@@ -9,7 +10,7 @@ interface ProductCardProps {
   product: Product;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
   const router = useRouter();
 
   return (
@@ -42,4 +43,4 @@ export function ProductCard({ product }: ProductCardProps) {
       </div>
     </Card>
   );
-}
+});

@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { Card, Image } from 'antd-mobile';
 import type { Checkin } from '@/lib/types/database';
 import dayjs from 'dayjs';
@@ -18,16 +19,16 @@ function parseImageUrls(imageUrl: string): string[] {
   return [imageUrl];
 }
 
-export function CheckinCard({ checkin }: CheckinCardProps) {
+export const CheckinCard = memo(function CheckinCard({ checkin }: CheckinCardProps) {
   const imageUrls = parseImageUrls(checkin.image_url);
 
   return (
     <Card style={{ marginBottom: 12 }}>
       <div className="flex gap-3">
         <div className="flex gap-2 flex-wrap">
-          {imageUrls.map((url, i) => (
+          {imageUrls.map((url) => (
             <Image
-              key={i}
+              key={url}
               src={url}
               width={80}
               height={80}
@@ -47,4 +48,4 @@ export function CheckinCard({ checkin }: CheckinCardProps) {
       </div>
     </Card>
   );
-}
+});

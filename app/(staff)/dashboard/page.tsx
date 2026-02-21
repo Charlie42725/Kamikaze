@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Card, NoticeBar, Skeleton } from 'antd-mobile';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useKols } from '@/lib/hooks/useKols';
@@ -27,9 +27,21 @@ export default function StaffDashboard() {
     });
   }, [supabase, fetchKols, reminders]);
 
-  const activeKols = kols.filter((k) => getKolDisplayStatus(k) === 'active');
-  const upcomingKols = kols.filter((k) => getKolDisplayStatus(k) === 'upcoming');
-  const potentialKols = kols.filter((k) => k.status === 'potential');
+  const { activeKols, upcomingKols, potentialKols } = useMemo(() => {
+    const active: typeof kols = [];
+    const upcoming: typeof kols = [];
+    const potential: typeof kols = [];
+    for (const k of kols) {
+      if (k.status === 'potential') {
+        potential.push(k);
+      } else {
+        const s = getKolDisplayStatus(k);
+        if (s === 'active') active.push(k);
+        else if (s === 'upcoming') upcoming.push(k);
+      }
+    }
+    return { activeKols: active, upcomingKols: upcoming, potentialKols: potential };
+  }, [kols]);
 
   const bannerMessages: string[] = [];
   if (reminders.upcomingEndings.length > 0) {

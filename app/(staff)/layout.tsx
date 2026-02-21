@@ -1,5 +1,3 @@
-'use client';
-
 import StaffTabBar from '@/components/layout/StaffTabBar';
 
 export default function StaffLayout({ children }: { children: React.ReactNode }) {

@@ -256,6 +256,18 @@ CREATE TRIGGER settlements_updated_at BEFORE UPDATE ON public.settlements
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 
 -- ============================================
+-- Indexes (效能優化)
+-- ============================================
+
+CREATE INDEX idx_kols_staff_id ON public.kols(staff_id);
+CREATE INDEX idx_kols_status ON public.kols(status);
+CREATE INDEX idx_kols_group_buy_end_date ON public.kols(group_buy_end_date);
+CREATE INDEX idx_kols_pr_products ON public.kols(has_pr_products, pr_products_received) WHERE has_pr_products = TRUE;
+CREATE INDEX idx_checkins_staff_id ON public.checkins(staff_id);
+CREATE INDEX idx_settlements_kol_id ON public.settlements(kol_id);
+CREATE INDEX idx_settlements_is_settled ON public.settlements(is_settled);
+
+-- ============================================
 -- Auto-end expired KOLs
 -- ============================================
 
