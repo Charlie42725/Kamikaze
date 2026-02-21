@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { List, Switch, Tag, Empty, Skeleton, Toast, Collapse, Tabs } from 'antd-mobile';
+import { List, Switch, Tag, Empty, Skeleton, Toast, Collapse, Tabs, Dialog, Button } from 'antd-mobile';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
 import type { Kol, Profile } from '@/lib/types/database';
 
@@ -88,6 +88,29 @@ export default function AdminPrProductsPage() {
     fetchPrKols();
   }, [fetchPrKols]);
 
+  const handleSkipShipping = async (kol: KolWithStaff) => {
+    const confirmed = await Dialog.confirm({
+      title: '確認不必寄出',
+      content: `確定 @${kol.ig_handle} 不需要寄出公關品嗎？`,
+      confirmText: '確認',
+      cancelText: '取消',
+    });
+    if (!confirmed) return;
+
+    setKols(prev => prev.filter(k => k.id !== kol.id));
+    try {
+      const { error } = await supabase
+        .from('kols')
+        .update({ has_pr_products: false } as never)
+        .eq('id', kol.id);
+      if (error) throw error;
+      Toast.show({ content: '已標記為不必寄出', icon: 'success' });
+    } catch {
+      setKols(prev => [...prev, kol]);
+      Toast.show({ content: '更新失敗', icon: 'fail' });
+    }
+  };
+
   const handleToggleShipped = async (kolId: string, value: boolean) => {
     setKols(prev => prev.map(k => k.id === kolId ? { ...k, pr_shipped: value } : k));
     try {
@@ -111,7 +134,7 @@ export default function AdminPrProductsPage() {
   const directGroups = useMemo(() => groupByStaff(directKols), [directKols]);
   const conditionalGroups = useMemo(() => groupByStaff(conditionalKols), [conditionalKols]);
 
-  const renderKolList = (groups: ReturnType<typeof groupByStaff>, showShipToggle: boolean) => {
+  const renderKolList = (groups: ReturnType<typeof groupByStaff>, showShipToggle: boolean, showSkipOption = false) => {
     if (groups.length === 0) {
       return <Empty description="沒有資料" style={{ padding: '32px 0' }} />;
     }
@@ -157,6 +180,16 @@ export default function AdminPrProductsPage() {
                           {kol.pr_products_received ? '已收到' : '未收到'}
                         </Tag>
                       </div>
+                      {showSkipOption && (
+                        <Button
+                          size="small"
+                          color="danger"
+                          fill="outline"
+                          onClick={() => handleSkipShipping(kol)}
+                        >
+                          不必寄出
+                        </Button>
+                      )}
                     </div>
                   }
                 >
@@ -198,7 +231,7 @@ export default function AdminPrProductsPage() {
         ) : activeTab === 'direct' ? (
           renderKolList(directGroups, true)
         ) : (
-          renderKolList(conditionalGroups, true)
+          renderKolList(conditionalGroups, true, true)
         )}
       </div>
     </div>
