@@ -38,7 +38,7 @@ export type KolDisplayStatus = 'potential' | 'upcoming' | 'active' | 'ended';
 export const KOL_STATUS_LABELS: Record<string, string> = {
   potential: '潛在',
   upcoming: '待開團',
-  active: '進行中',
+  active: '開團中',
   ended: '已結束',
 };
 

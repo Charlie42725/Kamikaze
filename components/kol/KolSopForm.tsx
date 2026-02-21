@@ -30,7 +30,7 @@ interface KolSopFormProps {
 const statusOptions = [
   [
     { label: '潛在', value: 'potential' },
-    { label: '進行中', value: 'active' },
+    { label: '開團', value: 'active' },
     { label: '已結束', value: 'ended' },
   ],
 ];
