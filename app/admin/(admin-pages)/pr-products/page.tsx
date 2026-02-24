@@ -127,6 +127,22 @@ export default function AdminPrProductsPage() {
     }
   };
 
+  const handleToggleReminded = async (kolId: string, value: boolean) => {
+    setKols(prev => prev.map(k => k.id === kolId ? { ...k, pr_ship_reminded: value } : k));
+    try {
+      const { error } = await supabase
+        .from('kols')
+        .update({ pr_ship_reminded: value } as never)
+        .eq('id', kolId);
+
+      if (error) throw error;
+      Toast.show({ content: '更新成功', icon: 'success' });
+    } catch {
+      setKols(prev => prev.map(k => k.id === kolId ? { ...k, pr_ship_reminded: !value } : k));
+      Toast.show({ content: '更新失敗', icon: 'fail' });
+    }
+  };
+
   // Split by ship mode
   const directKols = useMemo(() => kols.filter((k) => k.pr_ship_mode !== 'after_3_sales'), [kols]);
   const conditionalKols = useMemo(() => kols.filter((k) => k.pr_ship_mode === 'after_3_sales'), [kols]);
@@ -169,10 +185,11 @@ export default function AdminPrProductsPage() {
                         </div>
                       )}
                       <div className="flex items-center justify-between">
-                        <span className="text-sm">已提醒</span>
-                        <Tag color={kol.pr_ship_reminded ? 'success' : 'default'}>
-                          {kol.pr_ship_reminded ? '已提醒' : '未提醒'}
-                        </Tag>
+                        <span className="text-sm">通知到貨</span>
+                        <Switch
+                          checked={kol.pr_ship_reminded}
+                          onChange={(checked) => handleToggleReminded(kol.id, checked)}
+                        />
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm">已收到</span>
