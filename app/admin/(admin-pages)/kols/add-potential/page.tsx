@@ -16,6 +16,7 @@ export default function AdminAddPotentialKolPage() {
   const supabase = useSupabase();
   const [staffList, setStaffList] = useState<Pick<Profile, 'id' | 'display_name'>[]>([]);
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
+  const [pickerVisible, setPickerVisible] = useState(false);
 
   useEffect(() => {
     const fetchStaff = async () => {
@@ -52,20 +53,22 @@ export default function AdminAddPotentialKolPage() {
 
       <Form>
         <Form.Header>指定行銷人員</Form.Header>
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <Form.Item label="行銷人員" trigger="onConfirm" onClick={(_, pickerRef: any) => pickerRef.current?.open()}>
-          <Picker
-            columns={staffOptions}
-            onConfirm={(val) => setSelectedStaffId((val[0] as string) || null)}
-          >
-            {() => (
-              <span style={{ color: selectedStaffId ? undefined : '#ccc' }}>
-                {selectedStaffId ? selectedStaffName : '請選擇行銷人員'}
-              </span>
-            )}
-          </Picker>
+        <Form.Item label="行銷人員" onClick={() => setPickerVisible(true)}>
+          <span style={{ color: selectedStaffId ? undefined : '#ccc' }}>
+            {selectedStaffId ? selectedStaffName : '請選擇行銷人員'}
+          </span>
         </Form.Item>
       </Form>
+
+      <Picker
+        columns={staffOptions}
+        visible={pickerVisible}
+        onConfirm={(val) => {
+          setSelectedStaffId((val[0] as string) || null);
+          setPickerVisible(false);
+        }}
+        onClose={() => setPickerVisible(false)}
+      />
 
       <KolPotentialForm
         overrideStaffId={selectedStaffId}
