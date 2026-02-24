@@ -6,10 +6,11 @@ import { useAuth } from '@/components/providers/AuthProvider';
 import type { KolInsert } from '@/lib/types/database';
 
 interface KolPotentialFormProps {
+  overrideStaffId?: string | null;
   onSubmit: (data: KolInsert) => Promise<void>;
 }
 
-export function KolPotentialForm({ onSubmit }: KolPotentialFormProps) {
+export function KolPotentialForm({ overrideStaffId, onSubmit }: KolPotentialFormProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +21,7 @@ export function KolPotentialForm({ onSubmit }: KolPotentialFormProps) {
         ig_handle: values.ig_handle,
         status: 'potential',
         notes: values.notes || null,
-        staff_id: user?.id || null,
+        staff_id: overrideStaffId !== undefined ? overrideStaffId : (user?.id || null),
       });
       Toast.show({ content: '新增成功', icon: 'success' });
     } catch {

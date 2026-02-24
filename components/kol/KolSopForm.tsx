@@ -22,6 +22,7 @@ import dayjs from 'dayjs';
 interface KolSopFormProps {
   initialData?: Kol;
   initialProductIds?: string[];
+  overrideStaffId?: string | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSubmit: (data: any, productIds: string[]) => Promise<void>;
   submitText?: string;
@@ -38,6 +39,7 @@ const statusOptions = [
 export function KolSopForm({
   initialData,
   initialProductIds = [],
+  overrideStaffId,
   onSubmit,
   submitText = '儲存',
 }: KolSopFormProps) {
@@ -80,7 +82,7 @@ export function KolSopForm({
         revenue_share_start_unit: values.revenue_share_start_unit ?? null,
         has_exclusive_store: values.has_exclusive_store || false,
         notes: values.notes || null,
-        staff_id: initialData ? initialData.staff_id : (user?.id || null),
+        staff_id: overrideStaffId !== undefined ? overrideStaffId : (initialData ? initialData.staff_id : (user?.id || null)),
       };
 
       await onSubmit(data, selectedProductIds);

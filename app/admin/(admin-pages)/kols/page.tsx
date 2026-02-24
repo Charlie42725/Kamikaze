@@ -1,16 +1,18 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Tabs, Skeleton, Empty, SearchBar, Collapse, Tag } from 'antd-mobile';
+import { useRouter } from 'next/navigation';
+import { Tabs, Skeleton, Empty, SearchBar, Collapse, Tag, Button } from 'antd-mobile';
 import { KolCard } from '@/components/kol/KolCard';
 import { useKols } from '@/lib/hooks/useKols';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
-import { getKolDisplayStatus } from '@/lib/constants';
+import { getKolDisplayStatus, ROUTES } from '@/lib/constants';
 import type { Profile } from '@/lib/types/database';
 
 type TabKey = 'all' | 'active' | 'upcoming' | 'potential' | 'ended';
 
 export default function AdminKolsPage() {
+  const router = useRouter();
   const supabase = useSupabase();
   const [activeTab, setActiveTab] = useState<TabKey>('all');
   const { kols, loading } = useKols();
@@ -68,7 +70,17 @@ export default function AdminKolsPage() {
   return (
     <div>
       <div className="px-4 pt-4">
-        <h2 className="text-xl font-bold mb-4">全部網紅</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold">全部網紅</h2>
+          <div className="flex gap-2">
+            <Button size="small" color="primary" fill="outline" onClick={() => router.push(ROUTES.ADMIN.KOL_ADD_POTENTIAL)}>
+              + 潛在
+            </Button>
+            <Button size="small" color="primary" onClick={() => router.push(ROUTES.ADMIN.KOL_ADD)}>
+              + SOP
+            </Button>
+          </div>
+        </div>
         <SearchBar
           placeholder="搜尋 IG 帳號"
           value={search}

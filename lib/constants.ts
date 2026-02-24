@@ -21,6 +21,8 @@ export const ROUTES = {
   ADMIN: {
     DASHBOARD: '/admin/dashboard',
     KOLS: '/admin/kols',
+    KOL_ADD: '/admin/kols/add',
+    KOL_ADD_POTENTIAL: '/admin/kols/add-potential',
     KOL_DETAIL: (id: string) => `/admin/kols/${id}`,
     KOL_EDIT: (id: string) => `/admin/kols/${id}/edit`,
     PRODUCTS: '/admin/products',
