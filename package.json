@@ -9,13 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
-"@supabase/ssr": "^0.8.0",
+    "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.95.3",
     "antd-mobile": "^5.42.3",
     "dayjs": "^1.11.19",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "swr": "^2.4.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {

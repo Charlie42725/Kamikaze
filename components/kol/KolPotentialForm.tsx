@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Form, Input, Button, TextArea, Toast } from 'antd-mobile';
-import { useAuth } from '@/components/providers/AuthProvider';
 import type { KolInsert } from '@/lib/types/database';
 
 interface KolPotentialFormProps {
@@ -11,7 +10,6 @@ interface KolPotentialFormProps {
 }
 
 export function KolPotentialForm({ overrideStaffId, onSubmit }: KolPotentialFormProps) {
-  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const handleFinish = async (values: { ig_handle: string; notes?: string }) => {
@@ -21,7 +19,7 @@ export function KolPotentialForm({ overrideStaffId, onSubmit }: KolPotentialForm
         ig_handle: values.ig_handle,
         status: 'potential',
         notes: values.notes || null,
-        staff_id: overrideStaffId !== undefined ? overrideStaffId : (user?.id || null),
+        staff_id: overrideStaffId ?? null,
       });
       Toast.show({ content: '新增成功', icon: 'success' });
     } catch {

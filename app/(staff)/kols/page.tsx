@@ -1,77 +1,26 @@
-'use client';
-
-import { useMemo, useState } from 'react';
-import { Tabs, Empty, Skeleton } from 'antd-mobile';
-import { AddOutline } from 'antd-mobile-icons';
-import { useRouter } from 'next/navigation';
-import { KolCard } from '@/components/kol/KolCard';
-import { useKols } from '@/lib/hooks/useKols';
-import { getKolDisplayStatus } from '@/lib/constants';
-import { ROUTES } from '@/lib/constants';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import { KolsPageClient } from './KolsPageClient';
 import type { Kol } from '@/lib/types/database';
 
-type TabKey = 'all' | 'active' | 'upcoming' | 'potential' | 'ended';
+export type KolWithProducts = Kol & { productNames: string[] };
 
-export default function KolsPage() {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabKey>('all');
-  const { kols, loading } = useKols();
+export default async function KolsPage() {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) redirect('/login');
 
-  const filteredKols = useMemo(() => {
-    if (activeTab === 'all') return kols;
-    return kols.filter((k) => getKolDisplayStatus(k) === activeTab);
-  }, [kols, activeTab]);
+  const { data } = await supabase
+    .from('kols')
+    .select('*, kol_products(product:products(name))')
+    .eq('staff_id', session.user.id)
+    .order('group_buy_start_date', { ascending: false, nullsFirst: false });
 
-  return (
-    <div>
-      <div className="px-4 pt-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">我的網紅</h2>
-        </div>
-      </div>
+  const kols: KolWithProducts[] = ((data ?? []) as unknown as (Kol & { kol_products?: { product: { name: string } | null }[] })[])
+    .map((k) => ({
+      ...k,
+      productNames: (k.kol_products ?? []).map((kp) => kp.product?.name).filter(Boolean) as string[],
+    }));
 
-      <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key as TabKey)}>
-        <Tabs.Tab title="全部" key="all" />
-        <Tabs.Tab title="進行中" key="active" />
-        <Tabs.Tab title="待開團" key="upcoming" />
-        <Tabs.Tab title="潛在" key="potential" />
-        <Tabs.Tab title="已結束" key="ended" />
-      </Tabs>
-
-      <div className="p-4">
-        {loading ? (
-          <div className="space-y-3">
-            <Skeleton.Paragraph lineCount={3} animated />
-            <Skeleton.Paragraph lineCount={3} animated />
-          </div>
-        ) : filteredKols.length === 0 ? (
-          <Empty description="尚無網紅資料" />
-        ) : (
-          filteredKols.map((kol) => <KolCard key={kol.id} kol={kol} />)
-        )}
-      </div>
-
-      <div
-        style={{
-          position: 'fixed',
-          bottom: 'calc(80px + env(safe-area-inset-bottom))',
-          right: 24,
-          zIndex: 999,
-          width: 48,
-          height: 48,
-          borderRadius: '50%',
-          background: 'var(--adm-color-primary, #1677ff)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#fff',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-          cursor: 'pointer',
-        }}
-        onClick={() => router.push(ROUTES.STAFF.KOL_ADD)}
-      >
-        <AddOutline fontSize={24} />
-      </div>
-    </div>
-  );
+  return <KolsPageClient kols={kols} />;
 }

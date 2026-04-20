@@ -1,0 +1,105 @@
+'use client';
+
+import { useMemo, useState } from 'react';
+import { Tabs, Empty, Collapse, Card, Tag } from 'antd-mobile';
+import { useRouter } from 'next/navigation';
+import { SettlementCard } from '@/components/settlement/SettlementCard';
+import { ROUTES } from '@/lib/constants';
+import type { Settlement } from '@/lib/types/database';
+import dayjs from 'dayjs';
+
+interface PendingKol {
+  id: string;
+  ig_handle: string;
+  group_buy_start_date: string | null;
+  group_buy_end_date: string;
+  staff_id: string | null;
+  staff?: { display_name: string } | null;
+}
+
+type SettlementWithKol = Settlement & {
+  kol?: { ig_handle: string; staff_id: string | null; staff?: { display_name: string } | null } | null;
+};
+
+interface Props {
+  pendingKols: PendingKol[];
+  settlements: SettlementWithKol[];
+}
+
+export function AdminSettlementsClient({ pendingKols, settlements }: Props) {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<'pending' | 'settled'>('pending');
+
+  const groupedPending = useMemo(() => {
+    const groups: Record<string, { staffName: string; items: PendingKol[] }> = {};
+    for (const kol of pendingKols) {
+      const staffName = kol.staff?.display_name || '未指派';
+      const key = kol.staff_id || '_unassigned';
+      if (!groups[key]) groups[key] = { staffName, items: [] };
+      groups[key].items.push(kol);
+    }
+    return Object.entries(groups).sort((a, b) => a[1].staffName.localeCompare(b[1].staffName));
+  }, [pendingKols]);
+
+  const groupedSettled = useMemo(() => {
+    const groups: Record<string, { staffName: string; items: SettlementWithKol[] }> = {};
+    for (const s of settlements) {
+      const staffName = s.kol?.staff?.display_name || '未指派';
+      const key = s.kol?.staff_id || '_unassigned';
+      if (!groups[key]) groups[key] = { staffName, items: [] };
+      groups[key].items.push(s);
+    }
+    return Object.entries(groups).sort((a, b) => a[1].staffName.localeCompare(b[1].staffName));
+  }, [settlements]);
+
+  return (
+    <div>
+      <div className="px-4 pt-4">
+        <h2 className="text-xl font-bold mb-4">結算管理</h2>
+      </div>
+
+      <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key as 'pending' | 'settled')}>
+        <Tabs.Tab title="待結算" key="pending" />
+        <Tabs.Tab title="已結算" key="settled" />
+      </Tabs>
+
+      <div className="p-4">
+        {activeTab === 'pending' ? (
+          pendingKols.length === 0 ? (
+            <Empty description="沒有待結算項目" />
+          ) : (
+            <Collapse>
+              {groupedPending.map(([key, { staffName, items }]) => (
+                <Collapse.Panel key={key} title={`${staffName}（${items.length}）`}>
+                  {items.map((kol) => (
+                    <Card key={kol.id} onClick={() => router.push(ROUTES.ADMIN.SETTLEMENT_DETAIL(kol.id))} style={{ marginBottom: 12, cursor: 'pointer' }}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold">@{kol.ig_handle}</span>
+                        <Tag color="warning" fill="outline">待結算</Tag>
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        開團：{kol.group_buy_start_date ? dayjs(kol.group_buy_start_date).format('YYYY/MM/DD') : '?'}
+                        {' ~ '}
+                        {kol.group_buy_end_date ? dayjs(kol.group_buy_end_date).format('YYYY/MM/DD') : '?'}
+                      </div>
+                    </Card>
+                  ))}
+                </Collapse.Panel>
+              ))}
+            </Collapse>
+          )
+        ) : settlements.length === 0 ? (
+          <Empty description="沒有已結算項目" />
+        ) : (
+          <Collapse>
+            {groupedSettled.map(([key, { staffName, items }]) => (
+              <Collapse.Panel key={key} title={`${staffName}（${items.length}）`}>
+                {items.map((settlement) => <SettlementCard key={settlement.id} settlement={settlement as never} />)}
+              </Collapse.Panel>
+            ))}
+          </Collapse>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -15,7 +15,6 @@ import {
   Space,
 } from 'antd-mobile';
 import { KolProductSelector } from './KolProductSelector';
-import { useAuth } from '@/components/providers/AuthProvider';
 import type { KolInsert, Kol } from '@/lib/types/database';
 import dayjs from 'dayjs';
 
@@ -43,7 +42,6 @@ export function KolSopForm({
   onSubmit,
   submitText = '儲存',
 }: KolSopFormProps) {
-  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>(initialProductIds);
   const [hasPr, setHasPr] = useState(initialData?.has_pr_products ?? false);
@@ -51,7 +49,6 @@ export function KolSopForm({
 
   const handleStartDateConfirm = (val: Date) => {
     form.setFieldsValue({ group_buy_start_date: val });
-    // Auto-set end date to start + 1 month if not already set
     const currentEnd = form.getFieldValue('group_buy_end_date');
     if (!currentEnd) {
       const endDate = dayjs(val).add(1, 'month').toDate();
@@ -82,7 +79,7 @@ export function KolSopForm({
         revenue_share_start_unit: values.revenue_share_start_unit ?? null,
         has_exclusive_store: values.has_exclusive_store || false,
         notes: values.notes || null,
-        staff_id: overrideStaffId !== undefined ? overrideStaffId : (initialData ? initialData.staff_id : (user?.id || null)),
+        staff_id: overrideStaffId !== undefined ? overrideStaffId : (initialData?.staff_id ?? null),
       };
 
       await onSubmit(data, selectedProductIds);

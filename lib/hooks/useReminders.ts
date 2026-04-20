@@ -41,42 +41,22 @@ export interface RemindersData {
 export function useReminders(options?: { skip?: boolean }): RemindersData {
   const skip = options?.skip ?? false;
   const supabase = useSupabase();
-  const { profile, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [upcomingEndings, setUpcomingEndings] = useState<GroupBuyEnding[]>([]);
   const [pendingPr, setPendingPr] = useState<PendingPrProduct[]>([]);
   const [pendingSettlements, setPendingSettlements] = useState<PendingSettlement[]>([]);
   const [loading, setLoading] = useState(!skip);
   const fetchedRef = useRef(skip);
 
-  const profileId = profile?.id;
-  const profileRole = profile?.role;
-
   const fetchReminders = useCallback(async () => {
-    if (skip) return;
+    if (skip || !user?.id) return;
     try {
       setLoading(true);
-      const staffFilter = profileRole === 'staff' && profileId ? { staff_id: profileId } : {};
-
       const [endingsRes, prRes, settlementsRes] = await Promise.all([
-        supabase
-          .from('upcoming_group_buy_endings')
-          .select('*')
-          .match(staffFilter)
-          .order('days_remaining', { ascending: true }),
-        supabase
-          .from('pending_pr_products')
-          .select('*')
-          .match(staffFilter),
-        supabase
-          .from('pending_settlements')
-          .select('*')
-          .match(staffFilter),
+        supabase.from('upcoming_group_buy_endings').select('*').order('days_remaining', { ascending: true }),
+        supabase.from('pending_pr_products').select('*'),
+        supabase.from('pending_settlements').select('*'),
       ]);
-
-      if (endingsRes.error) console.error('reminders endings error:', endingsRes.error);
-      if (prRes.error) console.error('reminders pr error:', prRes.error);
-      if (settlementsRes.error) console.error('reminders settlements error:', settlementsRes.error);
-
       setUpcomingEndings((endingsRes.data as GroupBuyEnding[]) ?? []);
       setPendingPr((prRes.data as PendingPrProduct[]) ?? []);
       setPendingSettlements((settlementsRes.data as PendingSettlement[]) ?? []);
@@ -86,18 +66,17 @@ export function useReminders(options?: { skip?: boolean }): RemindersData {
       setLoading(false);
       fetchedRef.current = true;
     }
-  }, [supabase, profileId, profileRole, skip]);
+  }, [supabase, user?.id, skip]);
 
   useEffect(() => {
     if (skip || authLoading) return;
-
-    if (profileId) {
+    if (user?.id) {
       fetchReminders();
     } else {
       setLoading(false);
       fetchedRef.current = true;
     }
-  }, [skip, authLoading, profileId, fetchReminders]);
+  }, [skip, authLoading, user?.id, fetchReminders]);
 
   const totalReminders = upcomingEndings.length + pendingPr.length + pendingSettlements.length;
 

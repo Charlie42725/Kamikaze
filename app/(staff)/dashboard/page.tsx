@@ -1,116 +1,30 @@
-'use client';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import { DashboardClient } from './DashboardClient';
+import type { Profile, Kol } from '@/lib/types/database';
 
-import { useEffect, useMemo, useRef } from 'react';
-import { Card, NoticeBar, Skeleton } from 'antd-mobile';
-import { useAuth } from '@/components/providers/AuthProvider';
-import { useKols } from '@/lib/hooks/useKols';
-import { useReminders } from '@/lib/hooks/useReminders';
-import { useSupabase } from '@/components/providers/SupabaseProvider';
-import { ReminderList } from '@/components/reminder/ReminderList';
-import { getKolDisplayStatus } from '@/lib/constants';
+export default async function StaffDashboard() {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) redirect('/login');
 
-export default function StaffDashboard() {
-  const { profile } = useAuth();
-  const supabase = useSupabase();
-  const { kols, loading: kolsLoading, fetchKols } = useKols();
-  const reminders = useReminders();
-  const autoEndedRef = useRef(false);
+  const userId = session.user.id;
 
-  useEffect(() => {
-    if (autoEndedRef.current) return;
-    autoEndedRef.current = true;
-    supabase.rpc('auto_end_expired_kols').then(({ data }) => {
-      if (data && data > 0) {
-        fetchKols();
-        reminders.fetchReminders();
-      }
-    });
-  }, [supabase, fetchKols, reminders]);
-
-  const { activeKols, upcomingKols, potentialKols } = useMemo(() => {
-    const active: typeof kols = [];
-    const upcoming: typeof kols = [];
-    const potential: typeof kols = [];
-    for (const k of kols) {
-      if (k.status === 'potential') {
-        potential.push(k);
-      } else {
-        const s = getKolDisplayStatus(k);
-        if (s === 'active') active.push(k);
-        else if (s === 'upcoming') upcoming.push(k);
-      }
-    }
-    return { activeKols: active, upcomingKols: upcoming, potentialKols: potential };
-  }, [kols]);
-
-  const bannerMessages: string[] = [];
-  if (reminders.upcomingEndings.length > 0) {
-    bannerMessages.push(`${reminders.upcomingEndings.length} 個開團即將到期`);
-  }
-  if (reminders.pendingPr.length > 0) {
-    bannerMessages.push(`${reminders.pendingPr.length} 位網紅尚未收到公關品`);
-  }
+  const [profileRes, kolsRes, endingsRes, prRes, settlementsRes] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', userId).single(),
+    supabase.from('kols').select('*').eq('staff_id', userId).order('group_buy_start_date', { ascending: false, nullsFirst: false }),
+    supabase.from('upcoming_group_buy_endings').select('*').eq('staff_id', userId).order('days_remaining', { ascending: true }),
+    supabase.from('pending_pr_products').select('*').eq('staff_id', userId),
+    supabase.from('pending_settlements').select('*').eq('staff_id', userId),
+  ]);
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">
-        你好，{profile?.display_name || ''}
-      </h2>
-
-      {bannerMessages.length > 0 && (
-        <NoticeBar
-          content={bannerMessages.join('；')}
-          color="alert"
-          closeable
-          style={{ marginBottom: 12 }}
-        />
-      )}
-
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <Card style={{ textAlign: 'center' }}>
-          {kolsLoading ? (
-            <Skeleton.Paragraph lineCount={1} animated />
-          ) : (
-            <>
-              <div className="text-2xl font-bold text-blue-500">{kols.length}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">全部網紅</div>
-            </>
-          )}
-        </Card>
-        <Card style={{ textAlign: 'center' }}>
-          {kolsLoading ? (
-            <Skeleton.Paragraph lineCount={1} animated />
-          ) : (
-            <>
-              <div className="text-2xl font-bold text-green-500">{activeKols.length}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">進行中</div>
-            </>
-          )}
-        </Card>
-        <Card style={{ textAlign: 'center' }}>
-          {kolsLoading ? (
-            <Skeleton.Paragraph lineCount={1} animated />
-          ) : (
-            <>
-              <div className="text-2xl font-bold text-blue-500">{upcomingKols.length}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">待開團</div>
-            </>
-          )}
-        </Card>
-        <Card style={{ textAlign: 'center' }}>
-          {kolsLoading ? (
-            <Skeleton.Paragraph lineCount={1} animated />
-          ) : (
-            <>
-              <div className="text-2xl font-bold text-yellow-500">{potentialKols.length}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">潛在</div>
-            </>
-          )}
-        </Card>
-      </div>
-
-      <h3 className="text-base font-semibold mb-3">待處理提醒</h3>
-      <ReminderList data={reminders} />
-    </div>
+    <DashboardClient
+      profile={profileRes.data as unknown as Profile}
+      kols={(kolsRes.data ?? []) as unknown as Kol[]}
+      upcomingEndings={(endingsRes.data ?? []) as unknown as { id: string; ig_handle: string; group_buy_end_date: string; staff_id: string | null; days_remaining: number }[]}
+      pendingPr={(prRes.data ?? []) as unknown as { id: string; ig_handle: string; staff_id: string | null; has_pr_products: boolean; pr_ship_reminded: boolean; pr_shipped: boolean; pr_products_received: boolean }[]}
+      pendingSettlements={(settlementsRes.data ?? []) as unknown as { id: string; ig_handle: string; group_buy_end_date: string; staff_id: string | null }[]}
+    />
   );
 }

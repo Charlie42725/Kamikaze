@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Checkbox, List, SpinLoading } from 'antd-mobile';
-import { useProducts } from '@/lib/hooks/useProducts';
+import { useSupabase } from '@/components/providers/SupabaseProvider';
+import type { Product } from '@/lib/types/database';
 
 interface KolProductSelectorProps {
   selectedIds: string[];
@@ -9,14 +11,24 @@ interface KolProductSelectorProps {
 }
 
 export function KolProductSelector({ selectedIds, onChange }: KolProductSelectorProps) {
-  const { products, loading } = useProducts();
+  const supabase = useSupabase();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from('products')
+      .select('*')
+      .eq('is_active', true)
+      .order('name', { ascending: true })
+      .then(({ data }) => {
+        setProducts((data as unknown as Product[]) ?? []);
+        setLoading(false);
+      });
+  }, [supabase]);
 
   if (loading) {
-    return (
-      <div className="flex justify-center py-4">
-        <SpinLoading />
-      </div>
-    );
+    return <div className="flex justify-center py-4"><SpinLoading /></div>;
   }
 
   if (products.length === 0) {
@@ -24,17 +36,10 @@ export function KolProductSelector({ selectedIds, onChange }: KolProductSelector
   }
 
   return (
-    <Checkbox.Group
-      value={selectedIds}
-      onChange={(val) => onChange(val as string[])}
-    >
+    <Checkbox.Group value={selectedIds} onChange={(val) => onChange(val as string[])}>
       <List>
         {products.map((product) => (
-          <List.Item
-            key={product.id}
-            prefix={<Checkbox value={product.id} />}
-            description={product.price ? `NT$ ${product.price}` : undefined}
-          >
+          <List.Item key={product.id} prefix={<Checkbox value={product.id} />} description={product.price ? `NT$ ${product.price}` : undefined}>
             {product.name}
           </List.Item>
         ))}

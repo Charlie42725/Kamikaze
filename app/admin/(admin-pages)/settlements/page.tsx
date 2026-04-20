@@ -1,116 +1,44 @@
-'use client';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import { AdminSettlementsClient } from './AdminSettlementsClient';
+import type { Settlement } from '@/lib/types/database';
 
-import { useMemo, useState } from 'react';
-import { Tabs, Empty, Collapse, Card, Tag, Skeleton } from 'antd-mobile';
-import { useRouter } from 'next/navigation';
-import { SettlementCard } from '@/components/settlement/SettlementCard';
-import { useSettlements } from '@/lib/hooks/useSettlements';
-import { ROUTES } from '@/lib/constants';
-import dayjs from 'dayjs';
+interface PendingKol {
+  id: string;
+  ig_handle: string;
+  group_buy_start_date: string | null;
+  group_buy_end_date: string;
+  staff_id: string | null;
+  staff?: { display_name: string } | null;
+}
 
-export default function SettlementsPage() {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'pending' | 'settled'>('pending');
-  const { settlements, pendingKols, loading } = useSettlements({
-    settled: activeTab === 'settled',
-  });
+type SettlementWithKol = Settlement & {
+  kol?: { ig_handle: string; staff_id: string | null; staff?: { display_name: string } | null } | null;
+};
 
-  // Group pending KOLs by staff
-  const groupedPending = useMemo(() => {
-    const groups: Record<string, { staffName: string; items: typeof pendingKols }> = {};
+export default async function AdminSettlementsPage() {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) redirect('/login');
 
-    for (const kol of pendingKols) {
-      const staffName = kol.staff?.display_name || '未指派';
-      const key = kol.staff_id || '_unassigned';
-      if (!groups[key]) {
-        groups[key] = { staffName, items: [] };
-      }
-      groups[key].items.push(kol);
-    }
+  const [endedKolsRes, settledIdsRes, settlementsRes] = await Promise.all([
+    supabase
+      .from('kols')
+      .select('id, ig_handle, group_buy_start_date, group_buy_end_date, staff_id, staff:profiles(display_name)')
+      .eq('status', 'ended')
+      .not('group_buy_end_date', 'is', null)
+      .order('group_buy_end_date', { ascending: true }),
+    supabase.from('settlements').select('kol_id').eq('is_settled', true),
+    supabase
+      .from('settlements')
+      .select('*, kol:kols(ig_handle, staff_id, group_buy_start_date, group_buy_end_date, staff:profiles(display_name))')
+      .eq('is_settled', true)
+      .order('settled_at', { ascending: false }),
+  ]);
 
-    return Object.entries(groups).sort((a, b) =>
-      a[1].staffName.localeCompare(b[1].staffName)
-    );
-  }, [pendingKols]);
+  const settledKolIds = new Set((settledIdsRes.data ?? []).map((s: { kol_id: string }) => s.kol_id));
+  const pendingKols = ((endedKolsRes.data ?? []) as unknown as PendingKol[]).filter((k) => !settledKolIds.has(k.id));
+  const settlements = (settlementsRes.data as unknown as SettlementWithKol[]) ?? [];
 
-  // Group settled settlements by staff
-  const groupedSettled = useMemo(() => {
-    const groups: Record<string, { staffName: string; items: typeof settlements }> = {};
-
-    for (const s of settlements) {
-      const staffName = s.kol?.staff?.display_name || '未指派';
-      const key = s.kol?.staff_id || '_unassigned';
-      if (!groups[key]) {
-        groups[key] = { staffName, items: [] };
-      }
-      groups[key].items.push(s);
-    }
-
-    return Object.entries(groups).sort((a, b) =>
-      a[1].staffName.localeCompare(b[1].staffName)
-    );
-  }, [settlements]);
-
-  return (
-    <div>
-      <div className="px-4 pt-4">
-        <h2 className="text-xl font-bold mb-4">結算管理</h2>
-      </div>
-
-      <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key as 'pending' | 'settled')}>
-        <Tabs.Tab title="待結算" key="pending" />
-        <Tabs.Tab title="已結算" key="settled" />
-      </Tabs>
-
-      <div className="p-4">
-        {loading ? (
-          <div className="space-y-3">
-            <Skeleton.Paragraph lineCount={3} animated />
-            <Skeleton.Paragraph lineCount={3} animated />
-            <Skeleton.Paragraph lineCount={3} animated />
-          </div>
-        ) : activeTab === 'pending' ? (
-          pendingKols.length === 0 ? (
-            <Empty description="沒有待結算項目" />
-          ) : (
-            <Collapse>
-              {groupedPending.map(([key, { staffName, items }]) => (
-                <Collapse.Panel key={key} title={`${staffName}（${items.length}）`}>
-                  {items.map((kol) => (
-                    <Card
-                      key={kol.id}
-                      onClick={() => router.push(ROUTES.ADMIN.SETTLEMENT_DETAIL(kol.id))}
-                      style={{ marginBottom: 12, cursor: 'pointer' }}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold">@{kol.ig_handle}</span>
-                        <Tag color="warning" fill="outline">待結算</Tag>
-                      </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        開團：{kol.group_buy_start_date ? dayjs(kol.group_buy_start_date).format('YYYY/MM/DD') : '?'}
-                        {' ~ '}
-                        {kol.group_buy_end_date ? dayjs(kol.group_buy_end_date).format('YYYY/MM/DD') : '?'}
-                      </div>
-                    </Card>
-                  ))}
-                </Collapse.Panel>
-              ))}
-            </Collapse>
-          )
-        ) : settlements.length === 0 ? (
-          <Empty description="沒有已結算項目" />
-        ) : (
-          <Collapse>
-            {groupedSettled.map(([key, { staffName, items }]) => (
-              <Collapse.Panel key={key} title={`${staffName}（${items.length}）`}>
-                {items.map((settlement) => (
-                  <SettlementCard key={settlement.id} settlement={settlement} />
-                ))}
-              </Collapse.Panel>
-            ))}
-          </Collapse>
-        )}
-      </div>
-    </div>
-  );
+  return <AdminSettlementsClient pendingKols={pendingKols} settlements={settlements} />;
 }
