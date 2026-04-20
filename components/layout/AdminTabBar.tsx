@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { TabBar } from 'antd-mobile';
 import {
@@ -21,6 +22,10 @@ const tabs = [
 export default function AdminTabBar() {
   const pathname = usePathname();
   const router = useRouter();
+
+  useEffect(() => {
+    tabs.forEach((tab) => router.prefetch(tab.key));
+  }, [router]);
 
   const activeKey = tabs.find((tab) => pathname.startsWith(tab.key))?.key ?? '/admin/dashboard';
 
