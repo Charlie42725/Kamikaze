@@ -1,18 +1,40 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { List, Switch, Tag, Empty, Toast, Tabs, Dialog, Skeleton } from 'antd-mobile';
+import { List, Switch, Tag, Empty, Toast, Tabs, Dialog, Skeleton, Button } from 'antd-mobile';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
 import { useStaffPrData } from '@/lib/hooks/data/useStaffPrData';
 import { mutate } from 'swr';
+import type { KolWithProducts } from '@/lib/hooks/data/useStaffPrData';
 
 export function PrProductsClient({ userId }: { userId: string }) {
   const supabase = useSupabase();
   const { data: kols, isLoading } = useStaffPrData(userId);
-  const [localKols, setLocalKols] = useState<typeof kols>(undefined);
+  const [localKols, setLocalKols] = useState<KolWithProducts[] | undefined>(undefined);
   const [activeTab, setActiveTab] = useState('direct');
 
   const displayKols = localKols ?? kols ?? [];
+
+  const handleCancelPr = async (kol: KolWithProducts) => {
+    const confirmed = await Dialog.confirm({
+      title: '已消失案件',
+      content: `確定取消與 @${kol.ig_handle} 的公關品合作嗎？`,
+      confirmText: '確定取消',
+      cancelText: '返回',
+    });
+    if (!confirmed) return;
+    setLocalKols((prev) => (prev ?? kols ?? []).filter((k) => k.id !== kol.id));
+    try {
+      const { error } = await supabase.from('kols').update({ has_pr_products: false } as never).eq('id', kol.id);
+      if (error) throw error;
+      await mutate(['staff-pr', userId]);
+      setLocalKols(undefined);
+      Toast.show({ content: '已取消公關品合作', icon: 'success' });
+    } catch {
+      setLocalKols((prev) => [...(prev ?? kols ?? []), kol]);
+      Toast.show({ content: '操作失敗', icon: 'fail' });
+    }
+  };
 
   const handleToggle = async (kolId: string, field: 'pr_ship_reminded' | 'pr_products_received', value: boolean) => {
     if (field === 'pr_products_received' && value) {
@@ -42,13 +64,23 @@ export function PrProductsClient({ userId }: { userId: string }) {
   const conditionalKols = useMemo(() => pendingKols.filter((k) => k.pr_ship_mode === 'after_3_sales'), [pendingKols]);
   const completedKols = useMemo(() => displayKols.filter((k) => k.pr_products_received), [displayKols]);
 
-  const renderKolList = (items: typeof displayKols) => {
+  const renderKolList = (items: KolWithProducts[]) => {
     if (items.length === 0) return <Empty description="沒有資料" style={{ padding: '32px 0' }} />;
     return (
       <List>
         {items.map((kol) => (
           <List.Item
             key={kol.id}
+            extra={
+              <Button
+                size="mini"
+                color="danger"
+                fill="outline"
+                onClick={(e) => { e.stopPropagation(); handleCancelPr(kol); }}
+              >
+                已消失案件
+              </Button>
+            }
             description={
               <div className="flex flex-col gap-2 mt-2">
                 <div className="flex items-center justify-between">
@@ -66,9 +98,7 @@ export function PrProductsClient({ userId }: { userId: string }) {
               </div>
             }
           >
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-medium">@{kol.ig_handle}</span>
-            </div>
+            <span className="font-medium">@{kol.ig_handle}</span>
             {kol.productNames.length > 0 && (
               <div className="flex gap-1 mt-1 flex-wrap">
                 {kol.productNames.map((name) => (

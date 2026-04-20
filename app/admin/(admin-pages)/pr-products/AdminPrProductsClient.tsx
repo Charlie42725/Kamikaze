@@ -27,12 +27,12 @@ export function AdminPrProductsClient() {
 
   const kols = localKols ?? fetchedKols ?? [];
 
-  const handleSkipShipping = async (kol: KolWithStaff) => {
+  const handleCancelPr = async (kol: KolWithStaff) => {
     const confirmed = await Dialog.confirm({
-      title: '確認不必寄出',
-      content: `確定 @${kol.ig_handle} 不需要寄出公關品嗎？`,
-      confirmText: '確認',
-      cancelText: '取消',
+      title: '已消失案件',
+      content: `確定取消與 @${kol.ig_handle} 的公關品合作嗎？`,
+      confirmText: '確定取消',
+      cancelText: '返回',
     });
     if (!confirmed) return;
     setLocalKols((prev) => (prev ?? fetchedKols ?? []).filter((k) => k.id !== kol.id));
@@ -41,10 +41,10 @@ export function AdminPrProductsClient() {
       if (error) throw error;
       await mutate('admin-pr');
       setLocalKols(undefined);
-      Toast.show({ content: '已標記為不必寄出', icon: 'success' });
+      Toast.show({ content: '已取消公關品合作', icon: 'success' });
     } catch {
       setLocalKols((prev) => [...(prev ?? fetchedKols ?? []), kol]);
-      Toast.show({ content: '更新失敗', icon: 'fail' });
+      Toast.show({ content: '操作失敗', icon: 'fail' });
     }
   };
 
@@ -79,7 +79,7 @@ export function AdminPrProductsClient() {
   const conditionalGroups = useMemo(() => groupByStaff(conditionalKols), [conditionalKols]);
   const completedGroups = useMemo(() => groupByStaff(completedKols), [completedKols]);
 
-  const renderKolList = (groups: ReturnType<typeof groupByStaff>, showShipToggle: boolean, showSkipOption = false) => {
+  const renderKolList = (groups: ReturnType<typeof groupByStaff>, showShipToggle: boolean) => {
     if (groups.length === 0) return <Empty description="沒有資料" style={{ padding: '32px 0' }} />;
     return (
       <Collapse>
@@ -97,6 +97,16 @@ export function AdminPrProductsClient() {
               {group.items.map((kol) => (
                 <List.Item
                   key={kol.id}
+                  extra={
+                    <Button
+                      size="mini"
+                      color="danger"
+                      fill="outline"
+                      onClick={(e) => { e.stopPropagation(); handleCancelPr(kol); }}
+                    >
+                      已消失案件
+                    </Button>
+                  }
                   description={
                     <div className="flex flex-col gap-2 mt-2">
                       {showShipToggle && (
@@ -113,15 +123,10 @@ export function AdminPrProductsClient() {
                         <span className="text-sm">已收到</span>
                         <Switch checked={kol.pr_products_received} onChange={(v) => handleToggle(kol.id, 'pr_products_received', v)} />
                       </div>
-                      {showSkipOption && (
-                        <Button size="small" color="danger" fill="outline" onClick={() => handleSkipShipping(kol)}>不必寄出</Button>
-                      )}
                     </div>
                   }
                 >
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium">@{kol.ig_handle}</span>
-                  </div>
+                  <span className="font-medium">@{kol.ig_handle}</span>
                   {kol.productNames.length > 0 && (
                     <div className="flex gap-1 mt-1 flex-wrap">
                       {kol.productNames.map((name) => (
@@ -156,7 +161,7 @@ export function AdminPrProductsClient() {
         ) : (
           <>
             {activeTab === 'direct' && renderKolList(directGroups, true)}
-            {activeTab === 'conditional' && renderKolList(conditionalGroups, true, true)}
+            {activeTab === 'conditional' && renderKolList(conditionalGroups, true)}
             {activeTab === 'completed' && renderKolList(completedGroups, false)}
           </>
         )}
