@@ -41,7 +41,16 @@ export function AdminPrProductsClient({ initialKols }: { initialKols: KolWithSta
     }
   };
 
-  const handleToggle = async (kolId: string, field: 'pr_shipped' | 'pr_ship_reminded', value: boolean) => {
+  const handleToggle = async (kolId: string, field: 'pr_shipped' | 'pr_ship_reminded' | 'pr_products_received', value: boolean) => {
+    if (field === 'pr_products_received' && value) {
+      const confirmed = await Dialog.confirm({
+        title: '確認已收到公關品',
+        content: '確定網紅已收到公關品嗎？',
+        confirmText: '確認',
+        cancelText: '取消',
+      });
+      if (!confirmed) return;
+    }
     setKols((prev) => prev.map((k) => (k.id === kolId ? { ...k, [field]: value } : k)));
     try {
       const { error } = await supabase.from('kols').update({ [field]: value } as never).eq('id', kolId);
@@ -53,10 +62,13 @@ export function AdminPrProductsClient({ initialKols }: { initialKols: KolWithSta
     }
   };
 
-  const directKols = useMemo(() => kols.filter((k) => k.pr_ship_mode !== 'after_3_sales'), [kols]);
-  const conditionalKols = useMemo(() => kols.filter((k) => k.pr_ship_mode === 'after_3_sales'), [kols]);
+  const pendingKols = useMemo(() => kols.filter((k) => !k.pr_products_received), [kols]);
+  const completedKols = useMemo(() => kols.filter((k) => k.pr_products_received), [kols]);
+  const directKols = useMemo(() => pendingKols.filter((k) => k.pr_ship_mode !== 'after_3_sales'), [pendingKols]);
+  const conditionalKols = useMemo(() => pendingKols.filter((k) => k.pr_ship_mode === 'after_3_sales'), [pendingKols]);
   const directGroups = useMemo(() => groupByStaff(directKols), [directKols]);
   const conditionalGroups = useMemo(() => groupByStaff(conditionalKols), [conditionalKols]);
+  const completedGroups = useMemo(() => groupByStaff(completedKols), [completedKols]);
 
   const renderKolList = (groups: ReturnType<typeof groupByStaff>, showShipToggle: boolean, showSkipOption = false) => {
     if (groups.length === 0) return <Empty description="沒有資料" style={{ padding: '32px 0' }} />;
@@ -90,7 +102,7 @@ export function AdminPrProductsClient({ initialKols }: { initialKols: KolWithSta
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm">已收到</span>
-                        <Tag color={kol.pr_products_received ? 'success' : 'default'}>{kol.pr_products_received ? '已收到' : '未收到'}</Tag>
+                        <Switch checked={kol.pr_products_received} onChange={(v) => handleToggle(kol.id, 'pr_products_received', v)} />
                       </div>
                       {showSkipOption && (
                         <Button size="small" color="danger" fill="outline" onClick={() => handleSkipShipping(kol)}>不必寄出</Button>
@@ -126,10 +138,13 @@ export function AdminPrProductsClient({ initialKols }: { initialKols: KolWithSta
       <Tabs activeKey={activeTab} onChange={setActiveTab}>
         <Tabs.Tab title={`直接寄出 (${directKols.length})`} key="direct" />
         <Tabs.Tab title={`銷售3件後 (${conditionalKols.length})`} key="conditional" />
+        {completedKols.length > 0 && <Tabs.Tab title={`已完成 (${completedKols.length})`} key="completed" />}
       </Tabs>
 
       <div className="p-4">
-        {activeTab === 'direct' ? renderKolList(directGroups, true) : renderKolList(conditionalGroups, true, true)}
+        {activeTab === 'direct' && renderKolList(directGroups, true)}
+        {activeTab === 'conditional' && renderKolList(conditionalGroups, true, true)}
+        {activeTab === 'completed' && renderKolList(completedGroups, false)}
       </div>
     </div>
   );

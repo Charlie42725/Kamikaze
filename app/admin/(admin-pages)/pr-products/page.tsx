@@ -14,7 +14,6 @@ export default async function AdminPrProductsPage() {
     .from('kols')
     .select('*, kol_products(product:products(name))')
     .eq('has_pr_products', true)
-    .eq('pr_products_received', false)
     .in('status', ['potential', 'active'])
     .order('created_at', { ascending: false });
 
