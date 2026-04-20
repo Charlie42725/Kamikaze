@@ -1,34 +1,21 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Tabs, Empty, Collapse, Card, Tag } from 'antd-mobile';
+import { Tabs, Empty, Collapse, Card, Tag, Skeleton } from 'antd-mobile';
 import { useRouter } from 'next/navigation';
 import { SettlementCard } from '@/components/settlement/SettlementCard';
 import { ROUTES } from '@/lib/constants';
-import type { Settlement } from '@/lib/types/database';
+import { useAdminSettlementsData } from '@/lib/hooks/data/useAdminSettlementsData';
+import type { PendingKol, SettlementWithKol } from '@/lib/hooks/data/useAdminSettlementsData';
 import dayjs from 'dayjs';
 
-interface PendingKol {
-  id: string;
-  ig_handle: string;
-  group_buy_start_date: string | null;
-  group_buy_end_date: string;
-  staff_id: string | null;
-  staff?: { display_name: string } | null;
-}
-
-type SettlementWithKol = Settlement & {
-  kol?: { ig_handle: string; staff_id: string | null; staff?: { display_name: string } | null } | null;
-};
-
-interface Props {
-  pendingKols: PendingKol[];
-  settlements: SettlementWithKol[];
-}
-
-export function AdminSettlementsClient({ pendingKols, settlements }: Props) {
+export function AdminSettlementsClient() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'pending' | 'settled'>('pending');
+  const { data, isLoading } = useAdminSettlementsData();
+
+  const pendingKols = data?.pendingKols ?? [];
+  const settlements = data?.settlements ?? [];
 
   const groupedPending = useMemo(() => {
     const groups: Record<string, { staffName: string; items: PendingKol[] }> = {};
@@ -64,7 +51,9 @@ export function AdminSettlementsClient({ pendingKols, settlements }: Props) {
       </Tabs>
 
       <div className="p-4">
-        {activeTab === 'pending' ? (
+        {isLoading && !data ? (
+          <Skeleton.Paragraph lineCount={5} animated />
+        ) : activeTab === 'pending' ? (
           pendingKols.length === 0 ? (
             <Empty description="沒有待結算項目" />
           ) : (

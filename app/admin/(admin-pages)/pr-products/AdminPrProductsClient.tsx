@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { List, Switch, Tag, Empty, Toast, Collapse, Tabs, Dialog, Button } from 'antd-mobile';
+import { List, Switch, Tag, Empty, Toast, Collapse, Tabs, Dialog, Button, Skeleton } from 'antd-mobile';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
-import type { KolWithStaff } from './page';
+import { useAdminPrData } from '@/lib/hooks/data/useAdminPrData';
+import { mutate } from 'swr';
+import type { KolWithStaff } from '@/lib/hooks/data/useAdminPrData';
 
 function groupByStaff(kols: KolWithStaff[]) {
   const groups: Record<string, KolWithStaff[]> = {};
@@ -17,10 +19,13 @@ function groupByStaff(kols: KolWithStaff[]) {
     .sort((a, b) => a.staffName.localeCompare(b.staffName));
 }
 
-export function AdminPrProductsClient({ initialKols }: { initialKols: KolWithStaff[] }) {
+export function AdminPrProductsClient() {
   const supabase = useSupabase();
-  const [kols, setKols] = useState(initialKols);
+  const { data: fetchedKols, isLoading } = useAdminPrData();
+  const [localKols, setLocalKols] = useState<KolWithStaff[] | undefined>(undefined);
   const [activeTab, setActiveTab] = useState('direct');
+
+  const kols = localKols ?? fetchedKols ?? [];
 
   const handleSkipShipping = async (kol: KolWithStaff) => {
     const confirmed = await Dialog.confirm({
@@ -30,13 +35,15 @@ export function AdminPrProductsClient({ initialKols }: { initialKols: KolWithSta
       cancelText: '取消',
     });
     if (!confirmed) return;
-    setKols((prev) => prev.filter((k) => k.id !== kol.id));
+    setLocalKols((prev) => (prev ?? fetchedKols ?? []).filter((k) => k.id !== kol.id));
     try {
       const { error } = await supabase.from('kols').update({ has_pr_products: false } as never).eq('id', kol.id);
       if (error) throw error;
+      await mutate('admin-pr');
+      setLocalKols(undefined);
       Toast.show({ content: '已標記為不必寄出', icon: 'success' });
     } catch {
-      setKols((prev) => [...prev, kol]);
+      setLocalKols((prev) => [...(prev ?? fetchedKols ?? []), kol]);
       Toast.show({ content: '更新失敗', icon: 'fail' });
     }
   };
@@ -51,13 +58,15 @@ export function AdminPrProductsClient({ initialKols }: { initialKols: KolWithSta
       });
       if (!confirmed) return;
     }
-    setKols((prev) => prev.map((k) => (k.id === kolId ? { ...k, [field]: value } : k)));
+    setLocalKols((prev) => (prev ?? fetchedKols ?? []).map((k) => (k.id === kolId ? { ...k, [field]: value } : k)));
     try {
       const { error } = await supabase.from('kols').update({ [field]: value } as never).eq('id', kolId);
       if (error) throw error;
+      await mutate('admin-pr');
+      setLocalKols(undefined);
       Toast.show({ content: '更新成功', icon: 'success' });
     } catch {
-      setKols((prev) => prev.map((k) => (k.id === kolId ? { ...k, [field]: !value } : k)));
+      setLocalKols((prev) => (prev ?? fetchedKols ?? []).map((k) => (k.id === kolId ? { ...k, [field]: !value } : k)));
       Toast.show({ content: '更新失敗', icon: 'fail' });
     }
   };
@@ -142,9 +151,15 @@ export function AdminPrProductsClient({ initialKols }: { initialKols: KolWithSta
       </Tabs>
 
       <div className="p-4">
-        {activeTab === 'direct' && renderKolList(directGroups, true)}
-        {activeTab === 'conditional' && renderKolList(conditionalGroups, true, true)}
-        {activeTab === 'completed' && renderKolList(completedGroups, false)}
+        {isLoading && !fetchedKols ? (
+          <Skeleton.Paragraph lineCount={5} animated />
+        ) : (
+          <>
+            {activeTab === 'direct' && renderKolList(directGroups, true)}
+            {activeTab === 'conditional' && renderKolList(conditionalGroups, true, true)}
+            {activeTab === 'completed' && renderKolList(completedGroups, false)}
+          </>
+        )}
       </div>
     </div>
   );

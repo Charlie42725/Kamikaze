@@ -1,18 +1,22 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Tabs, Empty, SearchBar, Collapse, Tag, Button } from 'antd-mobile';
+import { Tabs, Empty, SearchBar, Collapse, Tag, Button, Skeleton } from 'antd-mobile';
 import { KolCard } from '@/components/kol/KolCard';
 import { getKolDisplayStatus, ROUTES } from '@/lib/constants';
-import type { KolWithProducts } from './page';
+import { useAdminKolsData } from '@/lib/hooks/data/useAdminKolsData';
 
 type TabKey = 'all' | 'active' | 'upcoming' | 'potential' | 'ended';
 
-export function AdminKolsClient({ kols, staffMap }: { kols: KolWithProducts[]; staffMap: Record<string, string> }) {
+export function AdminKolsClient() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabKey>('all');
   const [search, setSearch] = useState('');
+  const { data, isLoading } = useAdminKolsData();
+
+  const kols = data?.kols ?? [];
+  const staffMap = data?.staffMap ?? {};
 
   const filteredKols = useMemo(() => {
     let list = kols;
@@ -59,7 +63,9 @@ export function AdminKolsClient({ kols, staffMap }: { kols: KolWithProducts[]; s
       </Tabs>
 
       <div className="p-4">
-        {filteredKols.length === 0 ? (
+        {isLoading && !data ? (
+          <Skeleton.Paragraph lineCount={5} animated />
+        ) : filteredKols.length === 0 ? (
           <Empty description="尚無網紅資料" />
         ) : (
           <Collapse>

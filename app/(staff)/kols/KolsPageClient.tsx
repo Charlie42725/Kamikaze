@@ -1,20 +1,22 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Tabs, Empty } from 'antd-mobile';
+import { Tabs, Empty, Skeleton } from 'antd-mobile';
 import { AddOutline } from 'antd-mobile-icons';
 import { useRouter } from 'next/navigation';
 import { KolCard } from '@/components/kol/KolCard';
 import { getKolDisplayStatus, ROUTES } from '@/lib/constants';
-import type { KolWithProducts } from './page';
+import { useStaffKolsData } from '@/lib/hooks/data/useStaffKolsData';
 
 type TabKey = 'all' | 'active' | 'upcoming' | 'potential' | 'ended';
 
-export function KolsPageClient({ kols }: { kols: KolWithProducts[] }) {
+export function KolsPageClient({ userId }: { userId: string }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabKey>('all');
+  const { data: kols, isLoading } = useStaffKolsData(userId);
 
   const filteredKols = useMemo(() => {
+    if (!kols) return [];
     if (activeTab === 'all') return kols;
     return kols.filter((k) => getKolDisplayStatus(k) === activeTab);
   }, [kols, activeTab]);
@@ -36,7 +38,9 @@ export function KolsPageClient({ kols }: { kols: KolWithProducts[] }) {
       </Tabs>
 
       <div className="p-4">
-        {filteredKols.length === 0 ? (
+        {isLoading ? (
+          <Skeleton.Paragraph lineCount={5} animated />
+        ) : filteredKols.length === 0 ? (
           <Empty description="尚無網紅資料" />
         ) : (
           filteredKols.map((kol) => <KolCard key={kol.id} kol={kol} />)

@@ -1,31 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { Tabs, Card, Tag, Empty } from 'antd-mobile';
+import { Tabs, Card, Tag, Empty, Skeleton } from 'antd-mobile';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StarRating } from '@/components/settlement/StarRating';
-import type { Settlement } from '@/lib/types/database';
+import { useStaffSettlementsData } from '@/lib/hooks/data/useStaffSettlementsData';
 import dayjs from 'dayjs';
 
-interface PendingKol {
-  id: string;
-  ig_handle: string;
-  group_buy_start_date: string | null;
-  group_buy_end_date: string;
-  staff_id: string | null;
-}
-
-type SettlementWithKol = Settlement & {
-  kol?: { ig_handle: string; staff_id: string | null; group_buy_start_date: string | null; group_buy_end_date: string | null } | null;
-};
-
-interface Props {
-  pendingKols: PendingKol[];
-  settlements: SettlementWithKol[];
-}
-
-export function SettlementsClient({ pendingKols, settlements }: Props) {
+export function SettlementsClient({ userId }: { userId: string }) {
   const [activeTab, setActiveTab] = useState<'pending' | 'settled'>('pending');
+  const { data, isLoading } = useStaffSettlementsData(userId);
+
+  const pendingKols = data?.pendingKols ?? [];
+  const settlements = data?.settlements ?? [];
 
   return (
     <div>
@@ -37,7 +24,9 @@ export function SettlementsClient({ pendingKols, settlements }: Props) {
       </Tabs>
 
       <div className="p-4">
-        {activeTab === 'pending' ? (
+        {isLoading && !data ? (
+          <Skeleton.Paragraph lineCount={5} animated />
+        ) : activeTab === 'pending' ? (
           pendingKols.length === 0 ? (
             <Empty description="沒有待結算項目" />
           ) : (

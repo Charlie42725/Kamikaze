@@ -1,14 +1,18 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { List, Switch, Tag, Empty, Toast, Tabs, Dialog } from 'antd-mobile';
+import { List, Switch, Tag, Empty, Toast, Tabs, Dialog, Skeleton } from 'antd-mobile';
 import { useSupabase } from '@/components/providers/SupabaseProvider';
-import type { KolWithProducts } from './page';
+import { useStaffPrData } from '@/lib/hooks/data/useStaffPrData';
+import { mutate } from 'swr';
 
-export function PrProductsClient({ initialKols }: { initialKols: KolWithProducts[] }) {
+export function PrProductsClient({ userId }: { userId: string }) {
   const supabase = useSupabase();
-  const [kols, setKols] = useState(initialKols);
+  const { data: kols, isLoading } = useStaffPrData(userId);
+  const [localKols, setLocalKols] = useState<typeof kols>(undefined);
   const [activeTab, setActiveTab] = useState('direct');
+
+  const displayKols = localKols ?? kols ?? [];
 
   const handleToggle = async (kolId: string, field: 'pr_ship_reminded' | 'pr_products_received', value: boolean) => {
     if (field === 'pr_products_received' && value) {
@@ -20,23 +24,25 @@ export function PrProductsClient({ initialKols }: { initialKols: KolWithProducts
       });
       if (!confirmed) return;
     }
-    setKols((prev) => prev.map((k) => (k.id === kolId ? { ...k, [field]: value } : k)));
+    setLocalKols((prev) => (prev ?? kols ?? []).map((k) => (k.id === kolId ? { ...k, [field]: value } : k)));
     try {
       const { error } = await supabase.from('kols').update({ [field]: value } as never).eq('id', kolId);
       if (error) throw error;
+      await mutate(['staff-pr', userId]);
+      setLocalKols(undefined);
       Toast.show({ content: '更新成功', icon: 'success' });
     } catch {
-      setKols((prev) => prev.map((k) => (k.id === kolId ? { ...k, [field]: !value } : k)));
+      setLocalKols((prev) => (prev ?? kols ?? []).map((k) => (k.id === kolId ? { ...k, [field]: !value } : k)));
       Toast.show({ content: '更新失敗', icon: 'fail' });
     }
   };
 
-  const pendingKols = useMemo(() => kols.filter((k) => !k.pr_products_received), [kols]);
+  const pendingKols = useMemo(() => displayKols.filter((k) => !k.pr_products_received), [displayKols]);
   const directKols = useMemo(() => pendingKols.filter((k) => k.pr_ship_mode !== 'after_3_sales'), [pendingKols]);
   const conditionalKols = useMemo(() => pendingKols.filter((k) => k.pr_ship_mode === 'after_3_sales'), [pendingKols]);
-  const completedKols = useMemo(() => kols.filter((k) => k.pr_products_received), [kols]);
+  const completedKols = useMemo(() => displayKols.filter((k) => k.pr_products_received), [displayKols]);
 
-  const renderKolList = (items: KolWithProducts[]) => {
+  const renderKolList = (items: typeof displayKols) => {
     if (items.length === 0) return <Empty description="沒有資料" style={{ padding: '32px 0' }} />;
     return (
       <List>
@@ -89,27 +95,33 @@ export function PrProductsClient({ initialKols }: { initialKols: KolWithProducts
       </Tabs>
 
       <div className="p-4">
-        {activeTab === 'direct' && renderKolList(directKols)}
-        {activeTab === 'conditional' && renderKolList(conditionalKols)}
-        {activeTab === 'completed' && (
-          completedKols.length === 0 ? (
-            <Empty description="沒有已完成項目" style={{ padding: '32px 0' }} />
-          ) : (
-            <List>
-              {completedKols.map((kol) => (
-                <List.Item key={kol.id} extra={<Tag color="success" fill="outline">已收到</Tag>}>
-                  <span>@{kol.ig_handle}</span>
-                  {kol.productNames.length > 0 && (
-                    <div className="flex gap-1 mt-1 flex-wrap">
-                      {kol.productNames.map((name) => (
-                        <Tag key={name} color="primary" fill="outline" style={{ fontSize: 10 }}>{name}</Tag>
-                      ))}
-                    </div>
-                  )}
-                </List.Item>
-              ))}
-            </List>
-          )
+        {isLoading && !kols ? (
+          <Skeleton.Paragraph lineCount={5} animated />
+        ) : (
+          <>
+            {activeTab === 'direct' && renderKolList(directKols)}
+            {activeTab === 'conditional' && renderKolList(conditionalKols)}
+            {activeTab === 'completed' && (
+              completedKols.length === 0 ? (
+                <Empty description="沒有已完成項目" style={{ padding: '32px 0' }} />
+              ) : (
+                <List>
+                  {completedKols.map((kol) => (
+                    <List.Item key={kol.id} extra={<Tag color="success" fill="outline">已收到</Tag>}>
+                      <span>@{kol.ig_handle}</span>
+                      {kol.productNames.length > 0 && (
+                        <div className="flex gap-1 mt-1 flex-wrap">
+                          {kol.productNames.map((name) => (
+                            <Tag key={name} color="primary" fill="outline" style={{ fontSize: 10 }}>{name}</Tag>
+                          ))}
+                        </div>
+                      )}
+                    </List.Item>
+                  ))}
+                </List>
+              )
+            )}
+          </>
         )}
       </div>
     </div>
