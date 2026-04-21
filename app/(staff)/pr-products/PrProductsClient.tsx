@@ -17,19 +17,22 @@ export function PrProductsClient({ userId }: { userId: string }) {
 
   const handleCancelPr = async (kol: KolWithProducts) => {
     const confirmed = await Dialog.confirm({
-      title: '已消失案件',
-      content: `確定取消與 @${kol.ig_handle} 的公關品合作嗎？`,
-      confirmText: '確定取消',
+      title: '取消公關品合作',
+      content: `確定取消與 @${kol.ig_handle} 的公關品合作並轉為潛在網紅嗎？`,
+      confirmText: '確定',
       cancelText: '返回',
     });
     if (!confirmed) return;
     setLocalKols((prev) => (prev ?? kols ?? []).filter((k) => k.id !== kol.id));
     try {
-      const { error } = await supabase.from('kols').update({ has_pr_products: false } as never).eq('id', kol.id);
+      const { error } = await supabase
+        .from('kols')
+        .update({ has_pr_products: false, status: 'potential' } as never)
+        .eq('id', kol.id);
       if (error) throw error;
       await mutate(['staff-pr', userId]);
       setLocalKols(undefined);
-      Toast.show({ content: '已取消公關品合作', icon: 'success' });
+      Toast.show({ content: '已轉為潛在網紅', icon: 'success' });
     } catch {
       setLocalKols((prev) => [...(prev ?? kols ?? []), kol]);
       Toast.show({ content: '操作失敗', icon: 'fail' });
@@ -71,16 +74,6 @@ export function PrProductsClient({ userId }: { userId: string }) {
         {items.map((kol) => (
           <List.Item
             key={kol.id}
-            extra={
-              <Button
-                size="mini"
-                color="danger"
-                fill="outline"
-                onClick={(e) => { e.stopPropagation(); handleCancelPr(kol); }}
-              >
-                已消失案件
-              </Button>
-            }
             description={
               <div className="flex flex-col gap-2 mt-2">
                 <div className="flex items-center justify-between">
@@ -98,14 +91,27 @@ export function PrProductsClient({ userId }: { userId: string }) {
               </div>
             }
           >
-            <span className="font-medium">@{kol.ig_handle}</span>
-            {kol.productNames.length > 0 && (
-              <div className="flex gap-1 mt-1 flex-wrap">
-                {kol.productNames.map((name) => (
-                  <Tag key={name} color="primary" fill="outline" style={{ fontSize: 10 }}>{name}</Tag>
-                ))}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-col gap-1 min-w-0">
+                <span className="font-medium">@{kol.ig_handle}</span>
+                {kol.productNames.length > 0 && (
+                  <div className="flex gap-1 flex-wrap">
+                    {kol.productNames.map((name) => (
+                      <Tag key={name} color="primary" fill="outline" style={{ fontSize: 10 }}>{name}</Tag>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
+              <Button
+                size="mini"
+                color="danger"
+                fill="none"
+                style={{ flexShrink: 0 }}
+                onClick={(e) => { e.stopPropagation(); handleCancelPr(kol); }}
+              >
+                取消
+              </Button>
+            </div>
           </List.Item>
         ))}
       </List>
